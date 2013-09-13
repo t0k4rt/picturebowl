@@ -6,14 +6,24 @@
 <body>
 
 Coucou !!
+<p id="img"></p>
 
+<script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    var socket = io.connect('http://picturebowl.herokuapp.com');
-    //var socket = io.connect('http://localhost:5000');
+    //var socket = io.connect('http://picturebowl.herokuapp.com');
+    var socket = io.connect('http://localhost:5000');
+
+    var img = $('#img');
     socket.on('news', function (data) {
         console.log(data);
         socket.emit('my other event', { my: 'data' });
+    });
+    socket.on('imgs', function (data) {
+        console.log(data);
+        $.each(data, function(index, value) {
+            img.append('<img src="' + value + '">')
+        });
     });
 </script>
 

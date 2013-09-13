@@ -31,20 +31,23 @@
 
 var port = process.env.PORT || 5000;
 var express = require("express");
-var api = require('instagram-node').instagram();
+var instagram = require('instagram-node').instagram();
 
+/** paris ***/
+var lat = 48.8534100, lng = 2.3488000, radius = 5000;
+var lastfetch = new Date().getTime() / 1000;
 
 var app = express();
 app.use(express.logger());
 
 
 /**** instagram features ***/
-api.use({
+instagram.use({
     client_id: "110c9472f3c54eabb46c39e62fa67b94",
     client_secret: "3554a233a50446cf84d5ed23cd50852b"
 });
 
-api.use({ access_token: "191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f" });
+instagram.use({ access_token: "191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f" });
 
 /*55dff26eda57405cb1bbd4906149b475*/
 
@@ -52,11 +55,11 @@ api.use({ access_token: "191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f" });
 var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
 
 exports.authorize_user = function(req, res) {
-    res.redirect(api.get_authorization_url(redirect_uri, { scope: ['likes'], state: 'a state' }));
+    res.redirect(instagram.get_authorization_url(redirect_uri, { scope: ['likes'], state: 'a state' }));
 };
 
 exports.handleauth = function(req, res) {
-    api.authorize_user(req.query.code, redirect_uri, function(err, result) {
+    instagram.authorize_user(req.query.code, redirect_uri, function(err, result) {
         if (err) {
             console.log(err.body);
             res.send("Didn't work");
@@ -80,8 +83,37 @@ app.get('/rtig', function(request, response) {
 });
 
 app.post('/rtig', function(request, response) {
-    io.sockets.emit('news', request.body);
-    console.log(request.body);
+
+    io.sockets.emit('news', {message: 'trying to emit medias'});
+
+    _lastfetch = new Date().getTime() / 1000;
+    instagram.tag_media_recent('me',  function(err, medias, pagination, limit) {
+        if(err)
+            console.error(err);
+        else {
+            var res = [];
+
+            for(index in medias) {
+                var media = medias[index];
+                //console.log(media);
+                if(parseInt(media.created_time) >= lastfetch)
+                    res.push(media.images.standard_resolution.url);
+            }
+
+            if(res.length > 0)
+                io.sockets.emit('imgs', res);
+
+            //update lastfetch only if we have newer value.
+            // should help dealing with concurrency and asynch
+
+            if(_lastfetch > lastfetch)
+                lastfetch = _lastfetch;
+        }
+
+
+        //console.log(medias);
+    });
+
     response.send('ok');
 });
 
@@ -117,7 +149,34 @@ io.sockets.on('connection', function (socket) {
 
 
 app.get('/hello', function(request, response) {
-    console.log('hello !!');
-    io.sockets.emit('news', { coucou: 'world' });
+    io.sockets.emit('news', {message: 'trying to emit medias'});
+
+    _lastfetch = new Date().getTime() / 1000;
+    instagram.tag_media_recent('me',  function(err, medias, pagination, limit) {
+        if(err)
+            console.error(err);
+        else {
+            var res = [];
+
+            for(index in medias) {
+                var media = medias[index];
+                //console.log(media);
+                if(parseInt(media.created_time) >= lastfetch)
+                    res.push(media.images.standard_resolution.url);
+            }
+
+            if(res.length > 0)
+                io.sockets.emit('imgs', res);
+
+            //update lastfetch only if we have newer value.
+            // should help dealing with concurrency and asynch
+
+            if(_lastfetch > lastfetch)
+                lastfetch = _lastfetch;
+        }
+
+
+        //console.log(medias);
+    });
     response.send('Hello World!');
 });
