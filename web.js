@@ -24,7 +24,9 @@
 
  {"meta":{"code":200},"data":{"object":"tag","object_id":"me","aspect":"media","callback_url":"http:\/\/picturebowl.herokuapp.com\/rtig","type":"subscription","id":"3796777"}}
 
+ curl -X DELETE https://api.instagram.com/v1/subscriptions?client_secret=3554a233a50446cf84d5ed23cd50852b&object=all&client_id=110c9472f3c54eabb46c39e62fa67b94
 
+ https://api.instagram.com/v1/subscriptions?client_secret=3554a233a50446cf84d5ed23cd50852b&client_id=110c9472f3c54eabb46c39e62fa67b94
  */
 
 var port = process.env.PORT || 5000;
