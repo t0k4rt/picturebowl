@@ -84,12 +84,6 @@ app.post('/rtig', function(request, response) {
 });
 
 
-app.get('/hello', function(request, response) {
-    io.sockets.emit('news', { hello: 'world' });
-    response.send('Hello World!');
-});
-
-
 app.get('/index.html', function(request, response) {
     fs.readFile(__dirname + '/index.html',
         function (err, data) {
@@ -117,4 +111,10 @@ io.sockets.on('connection', function (socket) {
     socket.on('my other event', function (data) {
         console.log(data);
     });
+});
+
+
+app.get('/hello', function(request, response) {
+    io.sockets.emit('news', { coucou: 'world' });
+    response.send('Hello World!');
 });
