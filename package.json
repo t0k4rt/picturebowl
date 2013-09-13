@@ -1,0 +1,16 @@
+{
+    "name": "picturebowl",
+    "description": "get realtime instagram feed",
+    "version": "0.1.0",
+    "author": "Alexandre Assouad",
+    "contributors": [
+        {
+            "name": "Alexandre Assouad",
+            "email": "alexandre.assouad@gmail.com"
+        }
+    ],
+    "dependencies": {
+        "express": "3.4.*",
+        "socket.io": "0.9.*"
+    }
+}
