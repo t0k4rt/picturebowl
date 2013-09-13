@@ -79,7 +79,7 @@ app.get('/rtig', function(request, response) {
 
 app.post('/rtig', function(request, response) {
     io.sockets.emit('news', request.body);
-    //console.log(request.body);
+    console.log(request.body);
     response.send('ok');
 });
 
@@ -115,6 +115,7 @@ io.sockets.on('connection', function (socket) {
 
 
 app.get('/hello', function(request, response) {
+    console.log('hello !!');
     io.sockets.emit('news', { coucou: 'world' });
     response.send('Hello World!');
 });
