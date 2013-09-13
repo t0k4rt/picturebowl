@@ -11,8 +11,8 @@ Coucou !!
 <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    //var socket = io.connect('http://picturebowl.herokuapp.com');
-    var socket = io.connect('http://localhost:5000');
+    var socket = io.connect('http://picturebowl.herokuapp.com');
+    //var socket = io.connect('http://localhost:5000');
 
     var img = $('#img');
     socket.on('news', function (data) {
