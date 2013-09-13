@@ -11,6 +11,22 @@
  * Redirect URI 	http://picturebowl.herokuapp.com/redirect
  */
 
+/**
+ *
+ *
+ curl -F 'client_id=110c9472f3c54eabb46c39e62fa67b94' \
+ -F 'client_secret=3554a233a50446cf84d5ed23cd50852b' \
+ -F 'object=tag' \
+ -F 'aspect=media' \
+ -F 'object_id=me' \
+ -F 'callback_url=http://picturebowl.herokuapp.com/rtig' \
+ https://api.instagram.com/v1/subscriptions/
+
+ {"meta":{"code":200},"data":{"object":"tag","object_id":"me","aspect":"media","callback_url":"http:\/\/picturebowl.herokuapp.com\/rtig","type":"subscription","id":"3796777"}}
+
+
+ */
+
 var port = process.env.PORT || 5000;
 var express = require("express");
 var api = require('instagram-node').instagram();
@@ -63,6 +79,7 @@ app.get('/rtig', function(request, response) {
 
 app.post('/rtig', function(request, response) {
     io.sockets.emit('news', request.body);
+    //console.log(request.body);
     response.send('ok');
 });
 
