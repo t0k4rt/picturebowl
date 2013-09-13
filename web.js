@@ -11,12 +11,10 @@ var port = process.env.PORT || 5000;
 var express = require("express")
     , fs = require('fs');
 
-var io = require('socket.io').listen(app.listen(port));
-
-
 var app = express();
-app.use(express.logger());
 
+
+app.use(express.logger());
 
 
 app.get('/hello', function(request, response) {
@@ -39,11 +37,14 @@ app.get('/index.html', function(request, response) {
 app.use(express.static(__dirname + '/static'));
 
 
+var io = require('socket.io').listen(app.listen(port, function() {
+    console.log("Listening on " + port);
+}));
+
 io.configure(function () {
     io.set("transports", ["xhr-polling"]);
     io.set("polling duration", 10);
 });
-
 
 io.sockets.on('connection', function (socket) {
     socket.emit('news', { hello: 'world' });
@@ -51,10 +52,3 @@ io.sockets.on('connection', function (socket) {
         console.log(data);
     });
 });
-
-
-app.listen(port, function() {
-    console.log("Listening on " + port);
-});
-
-
