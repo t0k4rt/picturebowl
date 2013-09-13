@@ -57,7 +57,8 @@ app.get('/redirect', exports.handleauth);
 
 
 app.get('/rtig', function(request, response) {
-    response.send('page exists');
+    console.log(request.query['hub.challenge']);
+    response.send(request.query['hub.challenge']);
 });
 
 app.post('/rtig', function(request, response) {
