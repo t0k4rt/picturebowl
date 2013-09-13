@@ -25,6 +25,9 @@ api.use({
     client_id: "110c9472f3c54eabb46c39e62fa67b94",
     client_secret: "3554a233a50446cf84d5ed23cd50852b"
 });
+ig.use({ access_token: "191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f" });
+
+/*55dff26eda57405cb1bbd4906149b475*/
 
 
 var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
@@ -50,6 +53,15 @@ app.get('/authorize_user', exports.authorize_user);
 
 // This is your redirect URI
 app.get('/redirect', exports.handleauth);
+
+app.get('/rtig', function(request, response) {
+    response.send('page exists');
+});
+
+app.post('/rtig', function(request, response) {
+    io.sockets.emit('news', request.body);
+    response.send('ok');
+});
 
 
 app.get('/hello', function(request, response) {
