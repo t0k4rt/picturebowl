@@ -31,6 +31,9 @@
 
 var port = process.env.PORT || 5000;
 var express = require("express");
+var https = require('https');
+var querystring = require('querystring');
+
 var instagram = require('instagram-node').instagram();
 
 /** paris ***/
@@ -40,6 +43,9 @@ var lastfetch = new Date().getTime() / 1000;
 var app = express();
 app.use(express.logger());
 
+
+var client_id = '110c9472f3c54eabb46c39e62fa67b94';
+var client_secret = '3554a233a50446cf84d5ed23cd50852b';
 
 /**** instagram features ***/
 instagram.use({
@@ -78,7 +84,6 @@ app.get('/redirect', exports.handleauth);
 
 
 app.get('/rtig', function(request, response) {
-    console.log(request.query['hub.challenge']);
     response.send(request.query['hub.challenge']);
 });
 
@@ -148,35 +153,68 @@ io.sockets.on('connection', function (socket) {
 });
 
 
-app.get('/hello', function(request, response) {
-    io.sockets.emit('news', {message: 'trying to emit medias'});
+app.get('/subscribe', function(request, response) {
 
-    _lastfetch = new Date().getTime() / 1000;
-    instagram.tag_media_recent('me',  function(err, medias, pagination, limit) {
-        if(err)
-            console.error(err);
-        else {
-            var res = [];
-
-            for(index in medias) {
-                var media = medias[index];
-                //console.log(media);
-                if(parseInt(media.created_time) >= lastfetch)
-                    res.push(media.images.standard_resolution.url);
-            }
-
-            if(res.length > 0)
-                io.sockets.emit('imgs', res);
-
-            //update lastfetch only if we have newer value.
-            // should help dealing with concurrency and asynch
-
-            if(_lastfetch > lastfetch)
-                lastfetch = _lastfetch;
-        }
-
-
-        //console.log(medias);
+    var post_data = querystring.stringify({
+        'client_id' : client_id,
+        'client_secret': client_secret,
+        'object': 'tag',
+        'aspect' : 'media',
+        'object_id' : 'me',
+        'callback_url': 'http://picturebowl.herokuapp.com/rtig'
     });
-    response.send('Hello World!');
+
+    var options = {
+        hostname: 'api.instagram.com',
+        path: '/v1/subscriptions',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': post_data.length
+        }
+    };
+
+    console.log(options);
+
+    var req = https.request(options, function(res) {
+        console.log('STATUS: ' + res.statusCode);
+        console.log('HEADERS: ' + JSON.stringify(res.headers));
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            response.send('BODY: ' + chunk);
+            //console.log('BODY: ' + chunk);
+        });
+    });
+
+    req.write(post_data);
+    req.end();
+});
+
+app.get('/unsubscribe', function(request, response) {
+
+    var post_data = querystring.stringify({
+        'client_id' : client_id,
+        'client_secret': client_secret
+    });
+
+    var options = {
+        hostname: 'api.instagram.com',
+        path: '/v1/subscriptions&' + post_data,
+        method: 'DELETE'
+    };
+
+
+    console.log(options);
+
+    var req = https.request(options, function(res) {
+        console.log('STATUS: ' + res.statusCode);
+        console.log('HEADERS: ' + JSON.stringify(res.headers));
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            //response.send('BODY: ' + chunk);
+            console.log('BODY: ' + chunk);
+        });
+    });
+
+    req.end();
 });
