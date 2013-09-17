@@ -1,30 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html style="height: 100%">
 <head>
     <title></title>
 </head>
-<body>
-
-Coucou !!
-<p id="img"></p>
-
+<body style="background-color: #000; min-height: 100%; margin: 0; padding: 0;">
+<div id="imgContainer" style="text-align: center; height: 100%;">
+</div>
 <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    var socket = io.connect('http://picturebowl.herokuapp.com');
-    //var socket = io.connect('http://localhost:5000');
+    //var socket = io.connect('http://picturebowl.herokuapp.com');
+    var socket = io.connect('http://localhost:5000');
 
-    var img = $('#img');
+    var imgList = [];
+
+    var lastTen = [];
+
     socket.on('news', function (data) {
         console.log(data);
-        socket.emit('my other event', { my: 'data' });
     });
     socket.on('imgs', function (data) {
         console.log(data);
         $.each(data, function(index, value) {
-            img.append('<img src="' + value + '">')
+            imgList.push(value);
+
+            if(lastTen.push(value) > 10)
+                lastTen.shift();
+
+
         });
     });
+
+    var i = 0;
+    var showImages = function showImages() {
+        console.log("calling show images");
+        var src = imgList.pop();
+
+        var length = lastTen.length;
+
+        if(!src) {
+            src = lastTen[i%length];
+             console.log('last ten');
+             console.log(src);
+        }
+
+        if(src) {
+            $('#imgContainer').append('<img id="img' + i + '" src="' + src + '"  style="height:100%; display: none;" >');
+
+            if(i > 0) {
+                $('#img' + (i-1)).fadeOut('slow', function() {
+                    console.log("fade in now");
+                    console.log($('#img' + i));
+                    $('#img' + i).fadeIn('slow');
+                    $('#img' + (i-1)).remove();
+                    i++;
+                });
+
+            }
+            else {
+                console.log('show image ' + i);
+                console.log($('#img' + i));
+                $('#img' + i).fadeIn();
+                i++;
+            }
+        }
+
+    };
+
+    //var show = setInterval((function() {showImages()}), 500);
+    var show = setInterval(showImages, 10000);
+
 </script>
 
 </body>

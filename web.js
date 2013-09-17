@@ -38,7 +38,7 @@ var instagram = require('instagram-node').instagram();
 
 /** paris ***/
 var lat = 48.8534100, lng = 2.3488000, radius = 5000;
-var lastfetch = new Date().getTime() / 1000;
+var lastfetch = new Date().getTime();
 
 var app = express();
 app.use(express.logger());
@@ -46,19 +46,19 @@ app.use(express.logger());
 
 var client_id = '110c9472f3c54eabb46c39e62fa67b94';
 var client_secret = '3554a233a50446cf84d5ed23cd50852b';
+var access_token = '191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f';
+var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
+
 
 /**** instagram features ***/
 instagram.use({
-    client_id: "110c9472f3c54eabb46c39e62fa67b94",
-    client_secret: "3554a233a50446cf84d5ed23cd50852b"
+    client_id: client_id,
+    client_secret: client_secret
 });
 
-instagram.use({ access_token: "191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f" });
-
+instagram.use({ access_token: access_token });
 /*55dff26eda57405cb1bbd4906149b475*/
 
-
-var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
 
 exports.authorize_user = function(req, res) {
     res.redirect(instagram.get_authorization_url(redirect_uri, { scope: ['likes'], state: 'a state' }));
@@ -91,48 +91,45 @@ app.post('/rtig', function(request, response) {
 
     io.sockets.emit('news', {message: 'trying to emit medias'});
 
-    _lastfetch = new Date().getTime() / 1000;
-    instagram.tag_media_recent('me',  function(err, medias, pagination, limit) {
-        if(err)
-            console.error(err);
-        else {
-            var res = [];
+    _lastfetch = new Date().getTime();
+    //we fetch max every 2 seconds
 
-            for(index in medias) {
-                var media = medias[index];
-                //console.log(media);
-                if(parseInt(media.created_time) >= lastfetch)
-                    res.push(media.images.standard_resolution.url);
-            }
+    if(_lastfetch >= lastfetch + 2000) {
 
-            if(res.length > 0)
+        console.log(parseInt(lastfetch / 1000));
+
+        instagram.tag_media_recent('me',  function(err, medias, pagination, limit) {
+            if(err)
+                console.error(err);
+            else {
+                var res = {};
+
+                for(index in medias) {
+                    var media = medias[index];
+                    /*
+                    if(media.caption.created_time)
+                        console.log(media.caption.created_time);*/
+
+                    if(media.caption && media.caption.created_time && media.caption.created_time >= parseInt(lastfetch / 1000 - 2))
+                        res[media.id] = media.images.standard_resolution.url;
+                }
+                console.log(res);
+
+                //if(res.length > 0)
                 io.sockets.emit('imgs', res);
 
-            //update lastfetch only if we have newer value.
-            // should help dealing with concurrency and asynch
+                //update lastfetch only if we have newer value.
+                // should help dealing with concurrency and asynch
 
-            if(_lastfetch > lastfetch)
-                lastfetch = _lastfetch;
-        }
+            }
+        });
 
-
-        //console.log(medias);
-    });
-
+        if(_lastfetch > lastfetch)
+            lastfetch = _lastfetch;
+    }
     response.send('ok');
 });
 
-
-app.get('/index.html', function(request, response) {
-    fs.readFile(__dirname + '/index.html',
-        function (err, data) {
-            if (err) {
-                return response.send('Error loading index.html');
-            }
-
-            response.send(data);
-        });
-});
 
 app.use(express.static(__dirname + '/static'));
 
@@ -145,76 +142,93 @@ io.configure(function () {
     io.set("polling duration", 10);
 });
 
+
+/*
 io.sockets.on('connection', function (socket) {
     socket.emit('news', { hello: 'world' });
     socket.on('my other event', function (data) {
         console.log(data);
     });
-});
+});*/
 
 
-app.get('/subscribe', function(request, response) {
+app.get('/subscribe/:tag', function(request, response) {
 
-    var post_data = querystring.stringify({
-        'client_id' : client_id,
-        'client_secret': client_secret,
-        'object': 'tag',
-        'aspect' : 'media',
-        'object_id' : 'me',
-        'callback_url': 'http://picturebowl.herokuapp.com/rtig'
-    });
-
-    var options = {
-        hostname: 'api.instagram.com',
-        path: '/v1/subscriptions',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': post_data.length
-        }
-    };
-
-    console.log(options);
-
-    var req = https.request(options, function(res) {
-        console.log('STATUS: ' + res.statusCode);
-        console.log('HEADERS: ' + JSON.stringify(res.headers));
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            response.send('BODY: ' + chunk);
-            //console.log('BODY: ' + chunk);
+    if(request.params.word) {
+        var post_data = querystring.stringify({
+            'client_id' : client_id,
+            'client_secret': client_secret,
+            'object': 'tag',
+            'aspect' : 'media',
+            'object_id' : request.params.word,
+            'callback_url': 'http://picturebowl.herokuapp.com/rtig'
         });
-    });
 
-    req.write(post_data);
-    req.end();
+        var options = {
+            hostname: 'api.instagram.com',
+            path: '/v1/subscriptions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': post_data.length
+            }
+        };
+
+        console.log(options);
+
+        var req = https.request(options, function(res) {
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) {
+                response.send(res.statusCode);
+            });
+        });
+
+        req.write(post_data);
+        req.end();
+    }
+    else
+        response.send('Tag cannot be blank');
+
 });
 
 app.get('/unsubscribe', function(request, response) {
 
     var post_data = querystring.stringify({
         'client_id' : client_id,
-        'client_secret': client_secret
+        'client_secret': client_secret,
+        'object': 'all'
     });
 
     var options = {
         hostname: 'api.instagram.com',
-        path: '/v1/subscriptions&' + post_data,
+        path: '/v1/subscriptions?' + post_data,
         method: 'DELETE'
     };
 
-
-    console.log(options);
-
     var req = https.request(options, function(res) {
-        console.log('STATUS: ' + res.statusCode);
-        console.log('HEADERS: ' + JSON.stringify(res.headers));
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            //response.send('BODY: ' + chunk);
-            console.log('BODY: ' + chunk);
+            response.send(res.statusCode);
         });
     });
 
     req.end();
+});
+
+
+app.get('/test/:word', function(request, response) {
+
+    console.log(request.params.word);
+    if(request.params.word) {
+        instagram.tag_media_recent(request.params.word,  function(err, medias, pagination, limit) {
+            if(err)
+                console.error(err);
+            else {
+                console.log(medias.length)
+            }
+        });
+        response.send(request.params.word);
+    }
+    else
+        response.send('no word');
 });
