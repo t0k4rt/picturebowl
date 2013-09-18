@@ -156,8 +156,8 @@ io.sockets.on('connection', function (socket) {
 
 app.get('/subscribe/:tag', function(request, response) {
 
-    if(request.params.word) {
-        tag = request.params.word;
+    if(request.params.tag) {
+        tag = request.params.tag;
 
         console.log('tag is set with : ' + tag);
 
@@ -166,7 +166,7 @@ app.get('/subscribe/:tag', function(request, response) {
             'client_secret': client_secret,
             'object': 'tag',
             'aspect' : 'media',
-            'object_id' : request.params.word,
+            'object_id' : tag,
             'callback_url': 'http://picturebowl.herokuapp.com/rtig'
         });
 
