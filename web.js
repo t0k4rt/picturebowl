@@ -91,7 +91,7 @@ app.get('/rtig', function(request, response) {
 
 app.post('/rtig', function(request, response) {
 
-    io.sockets.emit('news', {message: 'trying to emit medias'});
+    io.sockets.emit('debug', {message: 'instagram post'});
 
     _lastfetch = new Date().getTime();
     //we fetch max every 2 seconds
@@ -106,23 +106,18 @@ app.post('/rtig', function(request, response) {
             else {
                 var res = {};
 
+                io.sockets.emit('debug', medias);
                 for(index in medias) {
                     var media = medias[index];
                     /*
                     if(media.caption.created_time)
                         console.log(media.caption.created_time);*/
 
-                    if(media.caption && media.caption.created_time && media.caption.created_time >= parseInt(lastfetch / 1000 - 2))
-                        res[media.id] = media.images.standard_resolution.url;
+                    //if(media.caption && media.caption.created_time && media.caption.created_time >= parseInt(lastfetch / 1000))
+                    res[media.id] = media.images.standard_resolution.url;
                 }
                 console.log(res);
-
-                //if(res.length > 0)
                 io.sockets.emit('imgs', res);
-
-                //update lastfetch only if we have newer value.
-                // should help dealing with concurrency and asynch
-
             }
         });
 
