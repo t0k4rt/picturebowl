@@ -49,11 +49,8 @@ var client_secret = '3554a233a50446cf84d5ed23cd50852b';
 var access_token = '191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f';
 var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
 
-
 var tag = 'me';
-
 var lastSend = [];
-var res = {};
 
 /**** instagram features ***/
 instagram.use({
@@ -93,7 +90,7 @@ app.get('/rtig', function(request, response) {
 });
 
 app.post('/rtig', function(request, response) {
-
+    var res = {};
     io.sockets.emit('debug', {message: 'instagram post'});
 
     // we only fetch api every seconds
@@ -101,25 +98,26 @@ app.post('/rtig', function(request, response) {
     if(_lastfetch >= lastfetch + 1000) {
 
         instagram.tag_media_recent(tag,  function(err, medias, pagination, limit) {
+
             if(err)
                 console.error(err);
             else {
 
                 for(index in medias) {
                     var media = medias[index];
+                    var id = media.id;
 
-                    if(lastSend.indexOf(media.id) == -1) {
-                        res[media.id] = media.images.standard_resolution.url;
+                    // we test if we haven't seen the image in the last 50 images sent
+                    if(lastSend.indexOf(id) == -1) {
 
+                        res[id] = media.images.standard_resolution.url;
                         //we memorize a list of the 50 last media.id we sent to the front
-                        if(lastSend.push(media.id) > 50)
+                        if(lastSend.push(id) > 50)
                             lastSend.shift();
                     }
 
                 }
-
-                lastSend = res;
-                io.sockets.emit('debug', res.length);
+                console.log(res);
                 io.sockets.emit('imgs', res);
             }
         });
