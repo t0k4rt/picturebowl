@@ -98,7 +98,7 @@ app.post('/rtig', function(request, response) {
 
     if(_lastfetch >= lastfetch + 2000) {
 
-        console.log(parseInt(lastfetch / 1000));
+        //console.log(parseInt(lastfetch / 1000));
 
         instagram.tag_media_recent(tag,  function(err, medias, pagination, limit) {
             if(err)
@@ -106,17 +106,18 @@ app.post('/rtig', function(request, response) {
             else {
                 var res = {};
 
-                io.sockets.emit('debug', medias);
+                io.sockets.emit('debug', medias.length);
                 for(index in medias) {
                     var media = medias[index];
                     /*
                     if(media.caption.created_time)
                         console.log(media.caption.created_time);*/
 
-                    //if(media.caption && media.caption.created_time && media.caption.created_time >= parseInt(lastfetch / 1000))
-                    res[media.id] = media.images.standard_resolution.url;
+                    if(media.caption && media.caption.created_time && media.caption.created_time >= parseInt(lastfetch / 1000))
+                        res[media.id] = media.images.standard_resolution.url;
                 }
-                console.log(res);
+                //console.log(res);
+                io.sockets.emit('debug', res.length);
                 io.sockets.emit('imgs', res);
             }
         });

@@ -22,19 +22,17 @@
     socket.on('imgs', function (data) {
         console.log(data);
         $.each(data, function(index, value) {
-            imgList.push(value);
 
+            imgList.push(value);
             if(lastTen.push(value) > 10)
                 lastTen.shift();
-
-
         });
     });
 
     var i = 0;
     var showImages = function showImages() {
         console.log("calling show images");
-        var src = imgList.pop();
+        var src = imgList.shift();
 
         var length = lastTen.length;
 
