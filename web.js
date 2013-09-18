@@ -52,6 +52,9 @@ var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
 
 var tag = 'me';
 
+var lastSend = [];
+var res = {};
+
 /**** instagram features ***/
 instagram.use({
     client_id: client_id,
@@ -93,30 +96,29 @@ app.post('/rtig', function(request, response) {
 
     io.sockets.emit('debug', {message: 'instagram post'});
 
+    // we only fetch api every seconds
     _lastfetch = new Date().getTime();
-    //we fetch max every 2 seconds
-
-    if(_lastfetch >= lastfetch + 2000) {
-
-        //console.log(parseInt(lastfetch / 1000));
+    if(_lastfetch >= lastfetch + 1000) {
 
         instagram.tag_media_recent(tag,  function(err, medias, pagination, limit) {
             if(err)
                 console.error(err);
             else {
-                var res = {};
 
-                io.sockets.emit('debug', medias.length);
                 for(index in medias) {
                     var media = medias[index];
-                    /*
-                    if(media.caption.created_time)
-                        console.log(media.caption.created_time);*/
 
-                    if(media.caption && media.caption.created_time && media.caption.created_time >= parseInt(lastfetch / 1000))
+                    if(lastSend.indexOf(media.id) == -1) {
                         res[media.id] = media.images.standard_resolution.url;
+
+                        //we memorize a list of the 50 last media.id we sent to the front
+                        if(lastSend.push(media.id) > 50)
+                            lastSend.shift();
+                    }
+
                 }
-                //console.log(res);
+
+                lastSend = res;
                 io.sockets.emit('debug', res.length);
                 io.sockets.emit('imgs', res);
             }
@@ -176,8 +178,6 @@ app.get('/subscribe/:tag', function(request, response) {
             }
         };
 
-        console.log(options);
-
         var req = https.request(options, function(res) {
             res.setEncoding('utf8');
             res.on('data', function (chunk) {
@@ -215,22 +215,4 @@ app.get('/unsubscribe', function(request, response) {
     });
 
     req.end();
-});
-
-
-app.get('/test/:word', function(request, response) {
-
-    console.log(request.params.word);
-    if(request.params.word) {
-        instagram.tag_media_recent(request.params.word,  function(err, medias, pagination, limit) {
-            if(err)
-                console.error(err);
-            else {
-                console.log(medias.length)
-            }
-        });
-        response.send(request.params.word);
-    }
-    else
-        response.send('no word');
 });
