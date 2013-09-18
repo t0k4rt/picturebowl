@@ -50,6 +50,8 @@ var access_token = '191558.110c947.741f112b6cb24e719db1fdb0bc70ee0f';
 var redirect_uri = 'http://picturebowl.herokuapp.com/redirect';
 
 
+var tag = 'me';
+
 /**** instagram features ***/
 instagram.use({
     client_id: client_id,
@@ -98,7 +100,7 @@ app.post('/rtig', function(request, response) {
 
         console.log(parseInt(lastfetch / 1000));
 
-        instagram.tag_media_recent('me',  function(err, medias, pagination, limit) {
+        instagram.tag_media_recent(tag,  function(err, medias, pagination, limit) {
             if(err)
                 console.error(err);
             else {
@@ -155,6 +157,10 @@ io.sockets.on('connection', function (socket) {
 app.get('/subscribe/:tag', function(request, response) {
 
     if(request.params.word) {
+        tag = request.params.word;
+
+        console.log('tag is set with : ' + tag);
+
         var post_data = querystring.stringify({
             'client_id' : client_id,
             'client_secret': client_secret,
