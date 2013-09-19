@@ -51,14 +51,7 @@
         if(src) {
 
             var toLoad = $('<img/>');
-            toLoad.attr('style', 'display: none;');
-
-            /*
-            used to simulate errors
-            if(i == 10)
-                src = src + 'jk';
-            */
-
+            toLoad.attr('style', 'height: 100%; display: none;');
             toLoad[0].src = src;
             toLoad.load(function() {
                 this.id = 'img' + i;
