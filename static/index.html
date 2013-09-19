@@ -9,8 +9,8 @@
 <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    var socket = io.connect('http://picturebowl.herokuapp.com');
-    //var socket = io.connect('http://localhost:5000');
+    //var socket = io.connect('http://picturebowl.herokuapp.com');
+    var socket = io.connect('http://localhost:5000');
 
     var imgList = [];
 
@@ -19,17 +19,23 @@
     socket.on('debug', function (data) {
         console.log(data);
     });
+
     socket.on('imgs', function (data) {
         console.log(data);
         $.each(data, function(index, value) {
 
             imgList.push(value);
-            if(lastTen.push(value) > 10)
+            if(lastTen.push(value) > 20)
                 lastTen.shift();
         });
     });
 
+
+    //state machine variables
     var i = 0;
+    var j = 0;
+    var play = false;
+
     var showImages = function showImages() {
         console.log("calling show images");
         var src = imgList.shift();
@@ -43,29 +49,51 @@
         }
 
         if(src) {
-            $('#imgContainer').append('<img id="img' + i + '" src="' + src + '"  style="height:100%; display: none;" >');
 
-            if(i > 0) {
-                $('#img' + (i-1)).fadeOut('slow', function() {
+            var toLoad = $('<img/>');
+            toLoad.attr('style', 'display: none;');
+
+            /*
+            used to simulate errors
+            if(i == 10)
+                src = src + 'jk';
+            */
+
+            toLoad[0].src = src;
+            toLoad.load(function() {
+                this.id = 'img' + i;
+                i++;
+                $('#imgContainer').append(this);
+
+                play = (i + 1) > j;
+
+            }).error(function() {
+                play = false;
+            });
+        }
+
+        if(play) {
+            if(j > 0) {
+                $('#img' + (j-1)).fadeOut('slow', function() {
                     console.log("fade in now");
-                    console.log($('#img' + i));
-                    $('#img' + i).fadeIn('slow');
-                    $('#img' + (i-1)).remove();
-                    i++;
+                    console.log($('#img' + j));
+                    $('#img' + j).fadeIn('slow');
+                    $('#img' + (j-1)).remove();
+                    j++;
                 });
 
             }
-            else {
-                console.log('show image ' + i);
-                console.log($('#img' + i));
-                $('#img' + i).fadeIn();
-                i++;
+            else if(j == 0) {
+                console.log('show image ' + j);
+                console.log($('#img' + j));
+                $('#img' + j).fadeIn();
+                j++;
             }
         }
 
     };
 
-    var show = setInterval(showImages, 10000);
+    var show = setInterval(showImages, 2000);
 
 </script>
 
