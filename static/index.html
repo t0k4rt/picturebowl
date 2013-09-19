@@ -42,10 +42,13 @@
 
         var length = lastTen.length;
 
+        var useLastTen = false;
+
         if(!src) {
             src = lastTen[i%length];
-             console.log('last ten');
-             console.log(src);
+            useLastTen = true;
+            console.log('last ten');
+            console.log(src);
         }
 
         if(src) {
@@ -62,6 +65,10 @@
 
             }).error(function() {
                 play = false;
+                    if(useLastTen) {
+                        // we remove not working image in array at index i
+                        lastTen.splice(i, 1);
+                    }
             });
         }
 
