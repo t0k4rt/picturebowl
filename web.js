@@ -106,11 +106,15 @@ app.post('/rtig', function(request, response) {
                 for(index in medias) {
                     var media = medias[index];
                     var id = media.id;
+                    console.log(media.caption);
 
                     // we test if we haven't seen the image in the last 50 images sent
                     if(lastSend.indexOf(id) == -1) {
 
-                        res[id] = media.images.standard_resolution.url;
+                        res[id] = {
+                            src: media.images.standard_resolution.url,
+                            caption: media.caption
+                        };
                         //we memorize a list of the 50 last media.id we sent to the front
                         if(lastSend.push(id) > 50)
                             lastSend.shift();

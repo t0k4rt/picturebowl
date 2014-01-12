@@ -1,0 +1,32 @@
+html {
+    min-height: 100%;
+}
+
+body {
+    background-color: #000;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#imgContainer {
+    text-align: center;
+    height: 100%;
+}
+
+.caption {
+    box-sizing: border-box;
+    display: block;
+    padding: 50px;
+    margin: 0;
+    font-family: 'helvetica neue', arial, sans-serif;
+    font-size: 16px;
+    text-transform: uppercase;
+    background-color: rgba(0,0,0,0.5);
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    min-height: 50px;
+    color: white;
+    bottom: 0;
+}

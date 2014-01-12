@@ -1,101 +1,16 @@
 <!DOCTYPE html>
-<html style="height: 100%">
-<head>
-    <title></title>
-</head>
-<body style="background-color: #000; min-height: 100%; margin: 0; padding: 0;">
-<div id="imgContainer" style="text-align: center; height: 100%;">
-</div>
-<script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    var socket = io.connect('http://picturebowl.herokuapp.com');
-    //var socket = io.connect('http://localhost:5000');
+    <html>
+    <head>
+        <title>picturebawl</title>
+        <link rel="stylesheet" href="./css/style.css" type="text/css"/>
+    </head>
+    <body>
+        <div id="imgContainer">
+        </div>
 
-    var imgList = [];
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/jquery-2.0.3.min.js"></script>
+        <script src="/js/script.js"></script>
 
-    var lastTen = [];
-
-    socket.on('debug', function (data) {
-        console.log(data);
-    });
-
-    socket.on('imgs', function (data) {
-        console.log(data);
-        $.each(data, function(index, value) {
-
-            imgList.push(value);
-            if(lastTen.push(value) > 20)
-                lastTen.shift();
-        });
-    });
-
-
-    //state machine variables
-    var i = 0;
-    var j = 0;
-    var play = false;
-
-    var showImages = function showImages() {
-        console.log("calling show images");
-        var src = imgList.shift();
-
-        var length = lastTen.length;
-
-        var useLastTen = false;
-
-        if(!src) {
-            src = lastTen[i%length];
-            useLastTen = true;
-            console.log('last ten');
-            console.log(src);
-        }
-
-        if(src) {
-
-            var toLoad = $('<img/>');
-            toLoad.attr('style', 'height: 100%; display: none;');
-            toLoad[0].src = src;
-            toLoad.load(function() {
-                this.id = 'img' + i;
-                i++;
-                $('#imgContainer').append(this);
-
-                play = (i + 1) > j;
-
-            }).error(function() {
-                play = false;
-                    if(useLastTen) {
-                        // we remove not working image in array at index i
-                        lastTen.splice(i, 1);
-                    }
-            });
-        }
-
-        if(play) {
-            if(j > 0) {
-                $('#img' + (j-1)).fadeOut('slow', function() {
-                    console.log("fade in now");
-                    console.log($('#img' + j));
-                    $('#img' + j).fadeIn('slow');
-                    $('#img' + (j-1)).remove();
-                    j++;
-                });
-
-            }
-            else if(j == 0) {
-                console.log('show image ' + j);
-                console.log($('#img' + j));
-                $('#img' + j).fadeIn();
-                j++;
-            }
-        }
-
-    };
-
-    var show = setInterval(showImages, 2000);
-
-</script>
-
-</body>
+    </body>
 </html>
