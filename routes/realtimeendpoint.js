@@ -2,6 +2,7 @@ var express = require('express')
   , Q = require('q')
   , ig = require('instagram-node').instagram();
 
+//auth token:  191558.94c4608.9af8927420d24e24ad25d0b85ed98f6f
 
 module.exports = function(app, redis) {
   var router = express.Router();

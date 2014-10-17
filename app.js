@@ -95,7 +95,7 @@ var Auth = require('./routes/auth');
 var RealTimeEndpoint = require('./routes/realtimeendpoint');
 
 
-app.use('/', new RealTimeEndpoint(app, io, pictureSubscriber));
+app.use('/', new RealTimeEndpoint(app, pictureSubscriber));
 app.use('/auth',  new Auth(app, pictureStore));
 //app.use('/rtig',  index);
 
