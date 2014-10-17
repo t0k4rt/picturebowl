@@ -1,5 +1,5 @@
 var express = require('express')
-  , q = require('q')
+  , Q = require('q')
   , ig = require('instagram-node').instagram();
 
 

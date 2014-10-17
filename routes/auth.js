@@ -26,7 +26,8 @@ module.exports = function(app, redis) {
       } else {
         console.log('Yay! Access token is ' + result.access_token);
         redis.set('accesstoken', result.access_token);
-        res.send('You made it!!');
+        console.log(result);
+        res.send('You made it!!' + result.access_token);
       }
     });
   });
