@@ -2,32 +2,35 @@ var express = require('express')
   , Q = require('q')
   , ig = require('instagram-node').instagram();
 
-//auth token:  191558.94c4608.9af8927420d24e24ad25d0b85ed98f6f
+var auth_token = '191558.94c4608.9af8927420d24e24ad25d0b85ed98f6f';
 
-module.exports = function(app, redis) {
+module.exports = function(app, pictureStore, pictureEmitter) {
   var router = express.Router();
 
   var checkMedia = function checkMedia(media) {
     var deferred = Q.defer();
-    redis.sismember('medialist', media.id, function(err, res){
+    pictureStore.sismember('medialist', media.id, function(err, res){
       if(err)
         deferred.reject(new Error(err));
-      else {
+
+      if(res == 0) {
         var mediaResult = {id: media.id};
         if(media.images.standard_resolution)
-          mediaResult.url = media.images.standard_resolution;
+          mediaResult.src = media.images.standard_resolution;
         else
           return;
 
         if(media.caption)
           mediaResult.caption = media.caption.text;
 
-        redis.sadd('medialist', media.id, function(err, res){
+        pictureStore.sadd('medialist', media.id, function(err, res){
           if (err)
             deferred.reject(new Error(err));
           deferred.resolve(mediaResult);
         });
       }
+      else
+        deferred.reject('Media alreday sent');
     });
 
     return deferred.promise;
@@ -35,22 +38,25 @@ module.exports = function(app, redis) {
 
 
   router.get('/test', function(req, res) {
-    redis.publish('sio', {coucou: 'lemonde'});
+    pictureEmitter.publish('sio', JSON.stringify({coucou: 'lemonde'}));
     res.send('ok');
   });
 
   router.get('/', function(req, res) {
 
-    Q.fcall(function () {return redis;})
-      .then(function(redis){
+    Q.fcall(function () {return;})
+      .then(function(){
         var deferred = Q.defer();
-        redis.get('auth_token', function(err, reply) {
+        pictureStore.get('auth_token', function(err, reply) {
           if(err)
             deferred.reject(new Error(err));
-          else if(reply == null)
-            deferred.reject(new Error('There is no auth token available'));
-
-          deferred.resolve(reply);
+          else if(reply == null){
+            deferred.resolve(auth_token);
+            //deferred.reject(new Error('There is no auth token available'));
+          }
+          else {
+            deferred.resolve(reply);
+          }
         });
 
         return deferred.promise;
@@ -64,7 +70,7 @@ module.exports = function(app, redis) {
           access_token:  token
         });
 
-        ig.tag_media_recent('tag', function(err, medias, pagination, remaining, limit) {
+        ig.tag_media_recent('music', function(err, medias, pagination, remaining, limit) {
           if(err)
             deferred.reject(new Error(err));
           deferred.resolve(medias);
@@ -78,17 +84,25 @@ module.exports = function(app, redis) {
           promises.push(checkMedia(media));
         });
 
-        return Q.all([
-          promises
-        ]);
+        return Q.allSettled(promises);
       })
       .then(function(mediaResult){
-        redis.publish('sio', mediaResult);
+
+        var result = [];
+        mediaResult.forEach(function(elt){
+          if(elt.state == 'fulfilled')
+            result.push(elt.value);
+        });
+
+        if(result.length > 0)
+          pictureEmitter.publish('sio', JSON.stringify(result));
+
+        console.log(result);
       })
       .fail(function(err){
         console.log(err);
       })
-      .done(function(){
+      .done(function(result){
         res.send('ok');
       });
   });

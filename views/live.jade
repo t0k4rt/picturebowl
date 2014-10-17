@@ -1,6 +1,5 @@
-
-extends layout
-block content
+extends livelayout
+block container
   block style
     style.
       svg {
@@ -18,11 +17,9 @@ block content
         shape-rendering: crispEdges;
       }
 
-  h1= title
-  p #{title}
-
 block js
   script(src="/socket.io/socket.io.js")
+  script(src="/js/jquery.js")
   script.
     var domain = "#{domain}"
   script(src="/js/live.js")

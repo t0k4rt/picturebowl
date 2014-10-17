@@ -33,16 +33,16 @@ var store = redis.createClient(redisUrl.port, redisUrl.hostname);
 
 var pictureStore = redis.createClient(redisUrl.port, redisUrl.hostname);
 var pictureSubscriber = redis.createClient(redisUrl.port, redisUrl.hostname);
+var pictureEmitter = redis.createClient(redisUrl.port, redisUrl.hostname);
 
 if(redisUrl.auth) {
   var auth = (redisUrl.auth.split(':'))[1]
   pub.auth(auth, function(){console.log("adentro! pub")});
   sub.auth(auth, function(){console.log("adentro! sub")});
   store.auth(auth, function(){console.log("adentro! store")});
-  pictureStore.auth(auth, function(){console.log("adentro! store")});
-  pictureSubscriber.auth(auth, function(){
-    pictureSubscriber.subscribe('sio');
-  });
+  pictureStore.auth(auth, function(){console.log("adentro! pictureStore")});
+  pictureSubscriber.auth(auth, function(){ console.log("adentro! pictureSubscriber") });
+  pictureEmitter.auth(auth, function(){ console.log("adentro! pictureSubscriber") });
 }
 
 /**
@@ -65,9 +65,14 @@ io.configure( function(){
   io.set('store', new RedisStore({redisPub: pub, redisSub: sub, redisClient: store, redis: redis}));
 });
 
+pictureSubscriber.subscribe('sio', function(err, res){
+  console.log('pictureSubscriber', err, res);
+});
+
 pictureSubscriber.on('message', function(channel, message) {
-  console.log(channel, message);
-  io.sockets.emit('content', message)
+  var res = JSON.parse(message);
+  console.log(channel, res);
+  io.sockets.emit('medias', res);
 });
 
 /**
@@ -90,13 +95,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 /**
  * Routes
  */
-var Index = require('./routes/index');
 var Auth = require('./routes/auth');
+var Slideshow = require('./routes/slideshow');
 var RealTimeEndpoint = require('./routes/realtimeendpoint');
 
-
-app.use('/', new RealTimeEndpoint(app, pictureSubscriber));
+app.use('/', new RealTimeEndpoint(app, pictureStore, pictureEmitter));
 app.use('/auth',  new Auth(app, pictureStore));
+app.use('/slideshow',  new Slideshow(app, pictureStore));
 //app.use('/rtig',  index);
 
 // catch 404 and forward to error handler
