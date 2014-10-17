@@ -55,10 +55,6 @@ io.configure( function(){
 });
 
 
-var Index = require('./routes/index');
-var Auth = require('./routes/auth');
-var RealTimeEndpoint = require('./routes/realtimeendpoint');
-
 /**
  * redis setup
  */
@@ -88,10 +84,15 @@ app.use(cookieParser());
 app.use(require('less-middleware')(path.join(__dirname, '/public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+/**
+ * Routes
+ */
+var Index = require('./routes/index');
+var Auth = require('./routes/auth');
+var RealTimeEndpoint = require('./routes/realtimeendpoint');
 
-var index = (new RealTimeEndpoint(app,pictureStore)).auth();
-console.log(index);
-app.use('/', new Index(app, io, pictureSubscriber));
+
+app.use('/', new RealTimeEndpoint(app, io, pictureSubscriber));
 app.use('/auth',  new Auth(app, pictureStore));
 //app.use('/rtig',  index);
 

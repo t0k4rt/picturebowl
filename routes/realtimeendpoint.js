@@ -92,6 +92,8 @@ module.exports = function(app, redis) {
       });
   });
 
+
+  return router;
 };
 
 
