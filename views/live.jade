@@ -1,0 +1,31 @@
+
+extends layout
+block content
+  block style
+    style.
+      svg {
+        font: 10px sans-serif;
+      }
+      .line {
+        fill: none;
+        stroke: #000;
+        stroke-width: 1.5px;
+      }
+      .axis path,
+      .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
+
+  h1= title
+  p #{title}
+
+block js
+  script(src="/socket.io/socket.io.js")
+  script.
+    var domain = "#{domain}"
+  script(src="/js/live.js")
+
+
+
