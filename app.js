@@ -73,8 +73,8 @@ pictureSubscriber.on('message', function(channel, message) {
 /**
  * Instagram app info
  */
-app.set('CLIENT_ID', '110c9472f3c54eabb46c39e62fa67b94');
-app.set('CLIENT_SECRET', '3554a233a50446cf84d5ed23cd50852b');
+app.set('CLIENT_ID', '94c4608d79df4d38a8a778dfb5b650bd');
+app.set('CLIENT_SECRET', '302c9c161fc94c1db7be6ee5961bc8ab');
 
 
 /**
