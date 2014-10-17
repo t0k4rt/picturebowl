@@ -24,19 +24,30 @@ var server = app.listen(app.get('port'), function() {
 
 
 /**
- * socket io + Redisstore setup
+ * Redisstore setup
  */
 var redisUrl = url.parse(app.get('redis_url'));
 var pub = redis.createClient(redisUrl.port, redisUrl.hostname);
 var sub = redis.createClient(redisUrl.port, redisUrl.hostname);
 var store = redis.createClient(redisUrl.port, redisUrl.hostname);
 
+var pictureStore = redis.createClient(redisUrl.port, redisUrl.hostname);
+var pictureSubscriber = redis.createClient(redisUrl.port, redisUrl.hostname);
+
 if(redisUrl.auth) {
   var auth = (redisUrl.auth.split(':'))[1]
   pub.auth(auth, function(){console.log("adentro! pub")});
   sub.auth(auth, function(){console.log("adentro! sub")});
   store.auth(auth, function(){console.log("adentro! store")});
+  pictureStore.auth(auth, function(){console.log("adentro! store")});
+  pictureSubscriber.auth(auth, function(){
+    pictureSubscriber.subscribe('sio');
+  });
 }
+
+/**
+ * Socket io
+ */
 
 var io = require('socket.io').listen(server);
 io.configure( function(){
@@ -54,13 +65,6 @@ io.configure( function(){
   io.set('store', new RedisStore({redisPub: pub, redisSub: sub, redisClient: store, redis: redis}));
 });
 
-
-/**
- * redis setup
- */
-var pictureStore = redis.createClient(redisUrl.port, redisUrl.hostname);
-var pictureSubscriber = redis.createClient(redisUrl.port, redisUrl.hostname);
-pictureSubscriber.subscribe('sio');
 pictureSubscriber.on('message', function(channel, message) {
   console.log(channel, message);
   io.sockets.emit('content', message)
@@ -71,7 +75,6 @@ pictureSubscriber.on('message', function(channel, message) {
  */
 app.set('CLIENT_ID', '110c9472f3c54eabb46c39e62fa67b94');
 app.set('CLIENT_SECRET', '3554a233a50446cf84d5ed23cd50852b');
-
 
 
 /**
