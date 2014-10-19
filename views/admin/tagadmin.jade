@@ -1,0 +1,17 @@
+extends ../layout
+
+block content
+  div(class='row')
+    h1= title
+    div(id='msg-container')
+    p Selectionner un tag à surveiller :
+
+    input(type='text',id='tag')
+    input(type='button', id='submit', value='Sauvegarder')
+
+block js
+  script(src="/socket.io/socket.io.js")
+  script(src="/js/jquery.js")
+  script.
+    var domain = "#{domain}"
+  script(src="/js/admin.js")

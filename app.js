@@ -98,10 +98,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 var Auth = require('./routes/auth');
 var Slideshow = require('./routes/slideshow');
 var RealTimeEndpoint = require('./routes/realtimeendpoint');
+var Admin = require('./routes/admin');
 
 app.use('/', new RealTimeEndpoint(app, pictureStore, pictureEmitter));
 app.use('/auth',  new Auth(app, pictureStore));
 app.use('/slideshow',  new Slideshow(app, pictureStore));
+app.use('/admin',  new Admin(app, pictureStore));
 //app.use('/rtig',  index);
 
 // catch 404 and forward to error handler

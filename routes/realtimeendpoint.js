@@ -1,6 +1,7 @@
 var express = require('express')
   , Q = require('q')
-  , ig = require('instagram-node').instagram();
+  , ig = require('instagram-node').instagram()
+  , emoji = require('emoji');
 
 var auth_token = '191558.94c4608.9af8927420d24e24ad25d0b85ed98f6f';
 
@@ -21,7 +22,7 @@ module.exports = function(app, pictureStore, pictureEmitter) {
           return;
 
         if(media.caption)
-          mediaResult.caption = media.caption.text;
+          mediaResult.caption = emoji.unifiedToHTML(media.caption.text);
 
         pictureStore.sadd('medialist', media.id, function(err, res){
           if (err)
@@ -70,7 +71,7 @@ module.exports = function(app, pictureStore, pictureEmitter) {
           access_token:  token
         });
 
-        ig.tag_media_recent('music', function(err, medias, pagination, remaining, limit) {
+        ig.tag_media_recent('claire', function(err, medias, pagination, remaining, limit) {
           if(err)
             deferred.reject(new Error(err));
           deferred.resolve(medias);

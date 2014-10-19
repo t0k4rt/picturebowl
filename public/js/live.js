@@ -41,7 +41,6 @@ var currentMedia;
 
 
 var pickMedia = function pickMedia() {
-  console.log('picking media');
   // init state
   var length = lastItems.length;
 
@@ -53,7 +52,7 @@ var pickMedia = function pickMedia() {
     media = lastItems[i%length];
     i++;
   }
-
+  console.log('media picked', media);
   return media;
 };
 
@@ -99,7 +98,6 @@ var showImages = function showImages() {
   if(preloadedItems.length >= maxPreloadedItems) {
     console.log('can append content');
     if(typeof $currentItem != "undefined") {
-      console.log($currentItem);
       $currentItem.fadeOut(delayOut, function() {
         var nextItem = preloadedItems.shift();
         var $nextItem = $('#'+nextItem.id);
