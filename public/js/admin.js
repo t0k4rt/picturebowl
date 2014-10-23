@@ -6,7 +6,7 @@ var $tag = $('#tag');
 var $msgContainer = $('#msg-container');
 $('#submit').click(function(event){
   console.log($tag.val());
-  $.post('/admin/tag', {tag: $tag.val()})
+  $.post('/tag', {tag: $tag.val()})
     .done(function(data) {
       console.log(data);
       $msgContainer.append('<div class="alert alert-success">Sauvegardé</div>')

@@ -115,4 +115,4 @@ var showImages = function showImages() {
 };
 
 
-var show = setInterval(showImages, 1000);
+var show = setInterval(showImages, 500);

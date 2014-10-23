@@ -63,20 +63,47 @@ module.exports = function(app, pictureStore, pictureEmitter) {
         return deferred.promise;
       })
       .then(function(token){
-        var deferred = Q.defer();
 
-        ig.use({
-          client_id: app.get('CLIENT_ID'),
-          client_secret:  app.get('CLIENT_SECRET'),
-          access_token:  token
+        var mainDeferred = Q.defer();
+
+        Q.fcall(function () {return;}).then(function() {
+          var deferred = Q.defer();
+          pictureStore.get('tag', function(err, reply) {
+            if(err)
+              deferred.reject(new Error(err));
+            else if(reply == null){
+              deferred.resolve('music');
+              //deferred.reject(new Error('There is no auth token available'));
+            }
+            else {
+              deferred.resolve(reply);
+            }
+          });
+
+          return deferred.promise;
+        }).then(function(tag){
+
+          var deferred = Q.defer();
+          ig.use({
+            client_id: app.get('CLIENT_ID'),
+            client_secret:  app.get('CLIENT_SECRET'),
+            access_token:  token
+          });
+
+          ig.tag_media_recent(tag, function(err, medias, pagination, remaining, limit) {
+            if(err)
+              deferred.reject(new Error(err));
+            deferred.resolve(medias);
+          });
+          return deferred.promise;
+        }).catch(function(err){
+          mainDeferred.reject(new Error(err));
+        }).done(function(medias){
+          mainDeferred.resolve(medias);
         });
 
-        ig.tag_media_recent('claire', function(err, medias, pagination, remaining, limit) {
-          if(err)
-            deferred.reject(new Error(err));
-          deferred.resolve(medias);
-        });
-        return deferred.promise;
+        return mainDeferred.promise;
+
       })
       .then(function(medias) {
 
