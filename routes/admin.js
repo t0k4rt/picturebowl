@@ -71,7 +71,7 @@ module.exports = function(app, redis) {
   });
 
 
-  router.post('/unsubscribe', function(req, res) {
+  router.get('/unsubscribe', function(req, res) {
 
     Q.fcall(function () {return true;})
       .then(function(){
