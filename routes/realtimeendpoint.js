@@ -216,12 +216,11 @@ module.exports = function(app, pictureStore, pictureEmitter) {
           pictureEmitter.publish('sio', JSON.stringify(result));
       })
       .done(function(result){
-        res.send('ok');
+        res.json({status: 'ok'});
       }, function(err) {
-        res.status(400).send(err.toString());
+        res.status(400).json({error: err.toString()});
       });
   });
-
 
   return router;
 };

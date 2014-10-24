@@ -29,3 +29,16 @@ $('#unsubscribe').click(function(event){
       $msgContainer.append('<div class="alert alert-danger">'+error.error+'</div>')
     });
 });
+
+$('#reboot').click(function(event){
+  console.log($tag.val());
+  $.get('/instagram/reboot')
+    .done(function(data) {
+      console.log(data);
+      $msgContainer.append("<div class='alert alert-success'>Le tag n'est plus surveillé</div>")
+    })
+    .fail(function(data) {
+      var error = JSON.parse(data.responseText);
+      $msgContainer.append('<div class="alert alert-danger">'+error.error+'</div>')
+    });
+});
