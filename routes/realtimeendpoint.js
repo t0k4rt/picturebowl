@@ -37,13 +37,6 @@ module.exports = function(app, pictureStore, pictureEmitter) {
     return deferred.promise;
   };
 
-
-  router.get('/test', function(req, res) {
-    pictureEmitter.publish('sio', JSON.stringify({coucou: 'lemonde'}));
-    res.send('ok');
-  });
-
-
   router.get('/', function(req, res) {
     if(req.query['hub.challenge'])
       res.send(req.query['hub.challenge']);
@@ -56,6 +49,125 @@ module.exports = function(app, pictureStore, pictureEmitter) {
 
     Q.npost(pictureStore, 'get', ['auth_token'])
       .then(function(token){
+        if(token == null) {
+          token = auth_token;
+        }
+        var mainDeferred = Q.defer();
+
+        Q.npost(pictureStore, 'get', ['tag'])
+          .then(function(tag){
+            var deferred = Q.defer();
+            ig.use({
+              client_id: app.get('CLIENT_ID'),
+              client_secret:  app.get('CLIENT_SECRET'),
+              access_token:  token
+            });
+
+            ig.tag_media_recent(tag, function(err, medias, pagination, remaining, limit) {
+              if(err)
+                deferred.reject(new Error(err));
+              deferred.resolve(medias);
+            });
+            return deferred.promise;
+          }).catch(function(err){
+            mainDeferred.reject(new Error(err));
+          }).done(function(medias){
+            mainDeferred.resolve(medias);
+          });
+
+        return mainDeferred.promise;
+      })
+
+      .then(function(medias) {
+        var promises = [];
+        medias.forEach(function(media) {
+          promises.push(checkMedia(media));
+        });
+        return Q.allSettled(promises);
+      })
+
+      .then(function(mediaResult){
+        var result = [];
+        mediaResult.forEach(function(elt){
+          if(elt.state == 'fulfilled')
+            result.push(elt.value);
+        });
+
+        if(result.length > 0)
+          pictureEmitter.publish('sio', JSON.stringify(result));
+      })
+      .done(function(result){
+        res.send('ok');
+      }, function(err) {
+        res.status(400).send(err.toString());
+      });
+  });
+
+
+  router.get('/test', function(req, res) {
+
+    Q.npost(pictureStore, 'get', ['auth_token'])
+      .then(function(token){
+        if(token == null) {
+          token = auth_token;
+        }
+        var mainDeferred = Q.defer();
+
+        Q.npost(pictureStore, 'get', ['tag'])
+          .then(function(tag){
+            var deferred = Q.defer();
+            ig.use({
+              client_id: app.get('CLIENT_ID'),
+              client_secret:  app.get('CLIENT_SECRET'),
+              access_token:  token
+            });
+
+            ig.tag_media_recent(tag, function(err, medias, pagination, remaining, limit) {
+              if(err)
+                deferred.reject(new Error(err));
+              deferred.resolve(medias);
+            });
+            return deferred.promise;
+          }).catch(function(err){
+            mainDeferred.reject(new Error(err));
+          }).done(function(medias){
+            mainDeferred.resolve(medias);
+          });
+
+        return mainDeferred.promise;
+      })
+
+      .then(function(medias) {
+        var promises = [];
+        medias.forEach(function(media) {
+          promises.push(checkMedia(media));
+        });
+        return Q.allSettled(promises);
+      })
+
+      .then(function(mediaResult){
+        var result = [];
+        mediaResult.forEach(function(elt){
+          if(elt.state == 'fulfilled')
+            result.push(elt.value);
+        });
+
+        if(result.length > 0)
+          pictureEmitter.publish('sio', JSON.stringify(result));
+      })
+      .done(function(result){
+        res.send('ok');
+      }, function(err) {
+        res.status(400).send(err.toString());
+      });
+  });
+
+
+  router.get('/reboot', function(req, res) {
+    Q.npost(pictureStore, 'del', ['medialist'])
+      .then(function(){
+        return Q.npost(pictureStore, 'get', ['auth_token']);
+      }).then(function(token){
         if(token == null) {
           token = auth_token;
         }
