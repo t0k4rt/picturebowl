@@ -5,9 +5,10 @@ block content
     h1= title
     div(id='msg-container')
     p Selectionner un tag à surveiller :
-
+    label tag à surveiller
     input(type='text',id='tag')
-    input(type='button', id='submit', value='Sauvegarder')
+    input(type='button', id='subscribe', value='Surveiller tag')
+    input(type='button', id='unsubscribe', value='Stopper')
 
 block js
   script(src="/socket.io/socket.io.js")
