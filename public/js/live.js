@@ -114,5 +114,5 @@ var showImages = function showImages() {
   }
 };
 
-
-var show = setInterval(showImages, 500);
+var interval = 3000;
+var show = setInterval(showImages, interval);
