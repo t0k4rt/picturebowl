@@ -22,23 +22,22 @@ module.exports = function(app, pictureStore) {
       res.status(400).json({error: 'tag is mandatory'});
     }
     else {
-      Q.fcall(function () {return true;})
-        .then(function(token){
-          var deferred = Q.defer();
-          ig.use({
-            client_id: app.get('CLIENT_ID'),
-            client_secret:  app.get('CLIENT_SECRET')
-          });
+      Q.fcall(function () {
+        var deferred = Q.defer();
+        ig.use({
+          client_id: app.get('CLIENT_ID'),
+          client_secret:  app.get('CLIENT_SECRET')
+        });
 
-          ig.add_tag_subscription(tag, 'http://klerg.herokuapp.com/instagram', function(err, result, remaining, limit){
-            if(err)
-              deferred.reject(new Error(err));
-            deferred.resolve(result);
-          });
-          return deferred.promise;
-        })
-        .then(function(){
-          return Q.npost(pictureStore, 'set', ['tag', tag]);
+        ig.add_tag_subscription(tag, 'http://klerg.herokuapp.com/instagram', function(err, result, remaining, limit){
+          if(err)
+            deferred.reject(new Error(err));
+          deferred.resolve(result);
+        });
+        return deferred.promise;
+      })
+        .then(function(subscription){
+          return Q.npost(store, 'hset', ['subscription:'+subscription.id, {channel: req.user.id, user: req.user.id, tag: subscription.tag}]);
         })
         .done(function(result) {
           res.status(200).json({result: 'ok'});
@@ -51,21 +50,28 @@ module.exports = function(app, pictureStore) {
 
 
   router.get('/unsubscribe', function(req, res) {
-    Q.fcall(function () {return true;})
-      .then(function(){
+    Q.fcall(function () {
+      return Q.npost(pictureStore, 'get', ['subscription:'+req.user.id]);
+    })
+      .then(function(subscriptionId){
         var deferred = Q.defer();
         ig.use({
           client_id: app.get('CLIENT_ID'),
           client_secret:  app.get('CLIENT_SECRET')
         });
 
-        ig.del_subscription({ all: true }, function(err,subscriptions,limit){
+        //todo check syntax here
+        ig.del_subscription({ subscriptionId: subscriptionId }, function(err,subscriptions,limit){
           if(err)
             deferred.reject(new Error(err));
-          deferred.resolve('coco');
+          deferred.resolve(subscriptionId);
         });
         return deferred.promise;
-      }).done(function(result) {
+    })
+      .then(function(subscriptionId){
+        return Q.npost(store, 'hrem', ['subscription:'+subscriptionId]);
+      })
+      .done(function(result) {
         res.status(200).json({result: 'ok'});
       }, function(err){
         res.status(400).json({error: JSON.stringify(err)});

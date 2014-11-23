@@ -6,7 +6,11 @@ var express = require('express')
   , cookieParser = require('cookie-parser')
   , bodyParser = require('body-parser')
   , redis = require('redis')
-  , debug = require('debug')('my-application');
+  , debug = require('debug')('my-application')
+  , session = require('express-session')
+  , RedisSessionStore = require('connect-redis')(session)
+  , passport = require('passport')
+  , InstagramStrategy = require('passport-instagram').Strategy;
 
 var app = express();
 app.set('redis_url', process.env.REDISCLOUD_URL || 'redis://127.0.0.1:6379');
@@ -65,21 +69,68 @@ io.configure( function(){
   io.set('store', new RedisStore({redisPub: pub, redisSub: sub, redisClient: store, redis: redis}));
 });
 
-pictureSubscriber.subscribe('sio', function(err, res){
+
+pictureSubscriber.subscribe('global', function(err, res){
   console.log('pictureSubscriber', err, res);
 });
 
+// todo : ici lier la session websockets à la session utilisateur pour pouvoir envoyer les données à un user précis
 pictureSubscriber.on('message', function(channel, message) {
   var res = JSON.parse(message);
   console.log(channel, res);
-  io.sockets.emit('medias', res);
+  io.sockets.emit('channel', res);
 });
+
 
 /**
  * Instagram app info
  */
 app.set('CLIENT_ID', '94c4608d79df4d38a8a778dfb5b650bd');
 app.set('CLIENT_SECRET', '302c9c161fc94c1db7be6ee5961bc8ab');
+
+
+
+
+/**
+ * Passport setup
+ */
+
+// serialize and deserialize
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+// config
+passport.use(new InstagramStrategy({
+    clientID: app.get('CLIENT_ID'),
+    clientSecret: app.get('CLIENT_SECRET'),
+    callbackURL: "http://klerg.herokuapp.com/auth/redirect"
+  },
+  function(accessToken, refreshToken, profile, done) {
+
+    //todo : use hset instead of set to store an object hash
+    Q.npost(store, 'hget', ['user:ig:'+profile.id])
+      .then(function(user){
+        if(user == null) {
+          user = {id: profile.id, accessToken: accessToken};
+          Q.npost(store, 'hset', ['user:ig:'+profile.id, {accessToken: accessToken}])
+            .done(function(){
+              return Q.resolve(user);
+            })
+        }
+        else
+          return Q.resolve(user);
+      })
+      .done(function(user){
+        return done(null, user);
+      }, function(error){
+        done(error);
+      });
+  }
+));
 
 
 /**
@@ -91,6 +142,15 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(require('less-middleware')(path.join(__dirname, '/public')));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  store: new RedisSessionStore({client: store, deb: 'session'}),
+  secret: 'keyboard cat'
+}));
+// use passport sessions
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 
 /**
  * Routes
@@ -105,6 +165,11 @@ app.use('/auth',  new Auth(app, pictureStore));
 app.use('/slideshow',  new Slideshow(app, pictureStore));
 app.use('/',  new Admin(app, pictureStore));
 //app.use('/rtig',  index);
+
+
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
