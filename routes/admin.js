@@ -5,7 +5,7 @@ var express = require('express')
 
 var redirect_uri = 'http://klerg.herokuapp.com/auth/redirect';
 
-module.exports = function(app, pictureStore) {
+module.exports = function(app, store) {
   
   var router = express.Router();
 
@@ -37,7 +37,11 @@ module.exports = function(app, pictureStore) {
         return deferred.promise;
       })
         .then(function(subscription){
-          return Q.npost(store, 'hset', ['subscription:'+subscription.id, {channel: req.user.id, user: req.user.id, tag: subscription.tag}]);
+          var promises = [
+            Q.npost(store, 'hmset', ['subscription:'+subscription.id, 'channel', req.user.id, 'userId', 'user:ig:'+req.user.id, 'tag', subscription.tag]),
+            Q.npost(store, 'set', ['user:subscription:'+req.user.id, subscription.id])
+          ];
+          return Q.allResolved(promises);
         })
         .done(function(result) {
           res.status(200).json({result: 'ok'});
@@ -51,7 +55,7 @@ module.exports = function(app, pictureStore) {
 
   router.get('/unsubscribe', function(req, res) {
     Q.fcall(function () {
-      return Q.npost(pictureStore, 'get', ['subscription:'+req.user.id]);
+      return Q.npost(store, 'get', ['user:subscription:'+req.user.id]);
     })
       .then(function(subscriptionId){
         var deferred = Q.defer();
@@ -60,8 +64,7 @@ module.exports = function(app, pictureStore) {
           client_secret:  app.get('CLIENT_SECRET')
         });
 
-        //todo check syntax here
-        ig.del_subscription({ subscriptionId: subscriptionId }, function(err,subscriptions,limit){
+        ig.del_subscription({ id: subscriptionId }, function(err,subscriptions,limit){
           if(err)
             deferred.reject(new Error(err));
           deferred.resolve(subscriptionId);
@@ -69,7 +72,12 @@ module.exports = function(app, pictureStore) {
         return deferred.promise;
     })
       .then(function(subscriptionId){
-        return Q.npost(store, 'hrem', ['subscription:'+subscriptionId]);
+
+        var promises = [
+          Q.npost(store, 'del', ['subscription:'+subscriptionId]),
+          Q.npost(store, 'del', ['user:subscription:'+req.user.id])
+        ];
+        return Q.allResolved(promises);
       })
       .done(function(result) {
         res.status(200).json({result: 'ok'});

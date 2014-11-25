@@ -35,18 +35,12 @@ var pub = redis.createClient(redisUrl.port, redisUrl.hostname);
 var sub = redis.createClient(redisUrl.port, redisUrl.hostname);
 var store = redis.createClient(redisUrl.port, redisUrl.hostname);
 
-var pictureStore = redis.createClient(redisUrl.port, redisUrl.hostname);
-var pictureSubscriber = redis.createClient(redisUrl.port, redisUrl.hostname);
-var pictureEmitter = redis.createClient(redisUrl.port, redisUrl.hostname);
 
 if(redisUrl.auth) {
   var auth = (redisUrl.auth.split(':'))[1]
   pub.auth(auth, function(){console.log("adentro! pub")});
   sub.auth(auth, function(){console.log("adentro! sub")});
   store.auth(auth, function(){console.log("adentro! store")});
-  pictureStore.auth(auth, function(){console.log("adentro! pictureStore")});
-  pictureSubscriber.auth(auth, function(){ console.log("adentro! pictureSubscriber") });
-  pictureEmitter.auth(auth, function(){ console.log("adentro! pictureSubscriber") });
 }
 
 /**
@@ -70,15 +64,15 @@ io.configure( function(){
 });
 
 
-pictureSubscriber.subscribe('global', function(err, res){
+sub.subscribe('global', function(err, res){
   console.log('pictureSubscriber', err, res);
 });
 
 // todo : ici lier la session websockets à la session utilisateur pour pouvoir envoyer les données à un user précis
-pictureSubscriber.on('message', function(channel, message) {
+sub.on('message', function(channel, message) {
   var res = JSON.parse(message);
   console.log(channel, res);
-  io.sockets.emit('channel', res);
+  //io.sockets.emit('channel', res);
 });
 
 
@@ -87,8 +81,6 @@ pictureSubscriber.on('message', function(channel, message) {
  */
 app.set('CLIENT_ID', '94c4608d79df4d38a8a778dfb5b650bd');
 app.set('CLIENT_SECRET', '302c9c161fc94c1db7be6ee5961bc8ab');
-
-
 
 
 /**
@@ -112,11 +104,11 @@ passport.use(new InstagramStrategy({
   function(accessToken, refreshToken, profile, done) {
 
     //todo : use hset instead of set to store an object hash
-    Q.npost(store, 'hget', ['user:ig:'+profile.id])
+    Q.npost(store, 'hgetall', ['user:ig:'+profile.id])
       .then(function(user){
         if(user == null) {
           user = {id: profile.id, accessToken: accessToken};
-          Q.npost(store, 'hset', ['user:ig:'+profile.id, {accessToken: accessToken}])
+          Q.npost(store, 'hset', ['user:ig:'+profile.id, 'accessToken', accessToken, 'id', profile.id])
             .done(function(){
               return Q.resolve(user);
             })
@@ -137,12 +129,15 @@ passport.use(new InstagramStrategy({
  * middleware
  */
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(multer()); // for parsing multipart/form-data
 app.use(cookieParser());
-app.use(require('less-middleware')(path.join(__dirname, '/public')));
-app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(session({
+  saveUninitialized: false,
+  resave: false,
   store: new RedisSessionStore({client: store, deb: 'session'}),
   secret: 'keyboard cat'
 }));
@@ -151,6 +146,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+app.use(require('less-middleware')(path.join(__dirname, '/public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 /**
  * Routes
@@ -160,13 +157,10 @@ var Slideshow = require('./routes/slideshow');
 var RealTimeEndpoint = require('./routes/realtimeendpoint');
 var Admin = require('./routes/admin');
 
-app.use('/instagram', new RealTimeEndpoint(app, pictureStore, pictureEmitter));
-app.use('/auth',  new Auth(app, pictureStore));
-app.use('/slideshow',  new Slideshow(app, pictureStore));
-app.use('/',  new Admin(app, pictureStore));
-//app.use('/rtig',  index);
-
-
+app.use('/instagram', new RealTimeEndpoint(app, store, pub));
+app.use('/auth',  new Auth(app, passport));
+app.use('/slideshow',  new Slideshow(app, store));
+app.use('/',  new Admin(app, store));
 
 
 

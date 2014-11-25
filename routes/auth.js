@@ -6,7 +6,7 @@ var redirect_uri = 'http://klerg.herokuapp.com/auth/redirect';
 
 
 
-module.exports = function(app, redis) {
+module.exports = function(app, passport) {
 
 
   var router = express.Router();

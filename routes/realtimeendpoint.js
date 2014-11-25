@@ -4,7 +4,7 @@ var express = require('express')
   , emoji = require('emoji');
 
 
-module.exports = function(app, pictureStore, pictureEmitter) {
+module.exports = function(app, store, pub) {
   var router = express.Router();
 
   /**
@@ -16,7 +16,7 @@ module.exports = function(app, pictureStore, pictureEmitter) {
    */
   var checkMedia = function checkMedia(media, user) {
     var deferred = Q.defer();
-    pictureStore.sismember('medialist:'+user.id, media.id, function(err, res){
+    store.sismember('medialist:'+user.id, media.id, function(err, res){
       if(err)
         deferred.reject(new Error(err));
 
@@ -30,7 +30,7 @@ module.exports = function(app, pictureStore, pictureEmitter) {
         if(media.caption)
           mediaResult.caption = emoji.unifiedToHTML(media.caption.text);
 
-        pictureStore.sadd('medialist:'+user.id, media.id, function(err, res){
+        store.sadd('medialist:'+user.id, media.id, function(err, res){
           if (err)
             deferred.reject(new Error(err));
           deferred.resolve(mediaResult);
@@ -43,6 +43,60 @@ module.exports = function(app, pictureStore, pictureEmitter) {
     return deferred.promise;
   };
 
+
+  var manageSubscription = function manageSubscription(subscriptionId, pub) {
+    var subscription;
+    // first we get the subscription from id
+    return Q.npost(store, 'hgetall', ['subscription:'+subscriptionId])
+      // we get the user (to retreive access token
+      .then(function(_subscription){
+        if(_subscription == null)
+          throw new Error('there is no such subscriptio in databse');
+
+        // we save subscription in a temp variable
+        subscription = _subscription;
+        return Q.npost(store, 'hgetall', [subscription.userId])
+      })
+      .then(function(user){
+        var deferred = Q.defer();
+        ig.use({
+          client_id: app.get('CLIENT_ID'),
+          client_secret:  app.get('CLIENT_SECRET'),
+          access_token:  user.accessToken
+        });
+
+        // we retrieve the new photos
+        ig.tag_media_recent(result.tag, function(err, medias, pagination, remaining, limit) {
+          if(err)
+            deferred.reject(new Error(err));
+          deferred.resolve(medias);
+        });
+
+        return deferred.promise;
+      })
+      // we filter the result to avoid to send again medias
+      .then(function(medias) {
+        var promises = [];
+        medias.forEach(function(media) {
+          promises.push(checkMedia(media, req.user));
+        });
+        return Q.allSettled(promises);
+      })
+      // we publish fulfilled promises to the right channel
+      .then(function(mediaResult){
+        var result = [];
+        mediaResult.forEach(function(elt){
+          if(elt.state == 'fulfilled')
+            result.push(elt.value);
+        });
+
+        if(result.length > 0)
+          pub.publish(subscription.channel, JSON.stringify(result));
+      });
+    };
+
+
+
   router.get('/', function(req, res) {
     if(req.query['hub.challenge'])
       res.send(req.query['hub.challenge']);
@@ -51,58 +105,22 @@ module.exports = function(app, pictureStore, pictureEmitter) {
     }
   });
 
-  router.post('/', function(req, res) {
 
-    //todo: strategy
+
+  router.post('/', function(req, res) {
     // we have to get the user id from the subscription id we receive
     // then we get tag and channell from database
     Q.fcall(function(){
-      // todo : check syntax
       // we get channel, tag and user id from subscriptio id
       // since when instagram send a post for a given tag, the subscription id should be provided
-      return Q.npost(store, 'hget', [req.params.subscription.id]);
+      var promises = [];
+
+      req.body.forEach(function(elt) {
+        promises.push(manageSubscription(elt.subscription_id));
+      });
+
+      return Q.allResolved(promises);
     })
-      .then(function(result){
-
-        return Q.fcall(function(){
-          return Q.npost(store, 'get', [result.user]);
-        })
-          .then(function(user){
-            var deferred = Q.defer();
-            ig.use({
-              client_id: app.get('CLIENT_ID'),
-              client_secret:  app.get('CLIENT_SECRET'),
-              access_token:  user.accessToken
-            });
-
-            ig.tag_media_recent(result.tag, function(err, medias, pagination, remaining, limit) {
-              if(err)
-                deferred.reject(new Error(err));
-              deferred.resolve(medias);
-            });
-
-            return deferred.promise;
-          })
-          // we filter the result to avoid to send again medias
-          .then(function(medias) {
-            var promises = [];
-            medias.forEach(function(media) {
-              promises.push(checkMedia(media, req.user));
-            });
-            return Q.allSettled(promises);
-          })
-          // we publish fulfilled promises to the right channel
-          .then(function(mediaResult){
-            var result = [];
-            mediaResult.forEach(function(elt){
-              if(elt.state == 'fulfilled')
-                result.push(elt.value);
-            });
-
-            if(result.length > 0)
-              pictureEmitter.publish(result.channel, JSON.stringify(result));
-          });
-      })
       .done(function(result){
         res.send('ok');
       }, function(err) {
@@ -140,7 +158,7 @@ module.exports = function(app, pictureStore, pictureEmitter) {
         });
 
         if(result.length > 0)
-          pictureEmitter.publish(req.user.id, JSON.stringify(result));
+          pub.publish(req.user.id, JSON.stringify(result));
       })
       .done(function(result){
         res.json({status: 'ok'});
