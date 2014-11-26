@@ -10,6 +10,7 @@ var express = require('express')
   , session = require('express-session')
   , RedisSessionStore = require('connect-redis')(session)
   , passport = require('passport')
+  , Q = require('q')
   , InstagramStrategy = require('passport-instagram').Strategy;
 
 var app = express();
