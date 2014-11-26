@@ -52,12 +52,15 @@ module.exports = function(app, store, pub) {
       .then(function(_subscription){
         if(_subscription == null)
           throw new Error('there is no such subscriptio in databse');
+        console.log('got user subscription', _subscription);
 
         // we save subscription in a temp variable
         subscription = _subscription;
         return Q.npost(store, 'hgetall', [subscription.userId])
       })
       .then(function(user){
+        console.log('got user', user);
+
         var deferred = Q.defer();
         ig.use({
           client_id: app.get('CLIENT_ID'),
