@@ -103,7 +103,8 @@ passport.use(new InstagramStrategy({
     callbackURL: "http://klerg.herokuapp.com/auth/redirect"
   },
   function(accessToken, refreshToken, profile, done) {
-
+    console.log(profile);
+    console.log(accessToken);
     //todo : use hset instead of set to store an object hash
     Q.npost(store, 'hgetall', ['user:ig:'+profile.id])
       .then(function(user){
