@@ -109,7 +109,7 @@ passport.use(new InstagramStrategy({
       .then(function(user){
         if(user == null) {
           user = {id: profile.id, accessToken: accessToken};
-          Q.npost(store, 'hset', ['user:ig:'+profile.id, 'accessToken', accessToken, 'id', profile.id])
+          Q.npost(store, 'hmset', ['user:ig:'+profile.id, 'accessToken', accessToken, 'id', profile.id])
             .done(function(){
               return Q.resolve(user);
             })
