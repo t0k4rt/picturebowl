@@ -111,6 +111,7 @@ module.exports = function(app, store, pub) {
 
 
   router.post('/', function(req, res) {
+    console.log('got notification : ', req.body);
     // we have to get the user id from the subscription id we receive
     // then we get tag and channell from database
     Q.fcall(function(){
