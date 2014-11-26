@@ -29,19 +29,20 @@ module.exports = function(app, store) {
           client_secret:  app.get('CLIENT_SECRET')
         });
 
-        ig.add_tag_subscription(tag, 'http://klerg.herokuapp.com/instagram', function(err, result, remaining, limit){
+        ig.add_tag_subscription(req.body.tag, 'http://klerg.herokuapp.com/instagram', function(err, result, remaining, limit){
           if(err)
             deferred.reject(new Error(err));
+          console.log(result);
           deferred.resolve(result);
         });
         return deferred.promise;
       })
         .then(function(subscription){
           var promises = [
-            Q.npost(store, 'hmset', ['subscription:'+subscription.id, 'channel', req.user.id, 'userId', 'user:ig:'+req.user.id, 'tag', subscription.tag]),
+            Q.npost(store, 'hmset', ['subscription:'+subscription.id, 'channel', req.user.id, 'userId', 'user:ig:'+req.user.id, 'tag', req.body.tag]),
             Q.npost(store, 'set', ['user:subscription:'+req.user.id, subscription.id])
           ];
-          return Q.allResolved(promises);
+          return Q.allSettled(promises);
         })
         .done(function(result) {
           res.status(200).json({result: 'ok'});
@@ -67,6 +68,7 @@ module.exports = function(app, store) {
         ig.del_subscription({ id: subscriptionId }, function(err,subscriptions,limit){
           if(err)
             deferred.reject(new Error(err));
+          console.log(subscriptions);
           deferred.resolve(subscriptionId);
         });
         return deferred.promise;
@@ -77,7 +79,7 @@ module.exports = function(app, store) {
           Q.npost(store, 'del', ['subscription:'+subscriptionId]),
           Q.npost(store, 'del', ['user:subscription:'+req.user.id])
         ];
-        return Q.allResolved(promises);
+        return Q.allSettled(promises);
       })
       .done(function(result) {
         res.status(200).json({result: 'ok'});

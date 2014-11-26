@@ -119,7 +119,7 @@ module.exports = function(app, store, pub) {
         promises.push(manageSubscription(elt.subscription_id));
       });
 
-      return Q.allResolved(promises);
+      return Q.allSettled(promises);
     })
       .done(function(result){
         res.send('ok');
