@@ -162,7 +162,7 @@ var Admin = require('./routes/admin');
 app.use('/instagram', new RealTimeEndpoint(app, store, pub));
 app.use('/auth',  new Auth(app, passport));
 app.use('/slideshow',  new Slideshow(app, store));
-app.use('/',  new Admin(app, store));
+app.use('/',  new Admin(app, store, sub));
 
 
 

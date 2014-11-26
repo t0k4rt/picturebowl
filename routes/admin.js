@@ -5,7 +5,7 @@ var express = require('express')
 
 var redirect_uri = 'http://klerg.herokuapp.com/auth/redirect';
 
-module.exports = function(app, store) {
+module.exports = function(app, store, sub) {
   
   var router = express.Router();
 
@@ -39,7 +39,8 @@ module.exports = function(app, store) {
       })
         .then(function(subscription){
           var promises = [
-            Q.npost(store, 'hmset', ['subscription:'+subscription.id, 'channel', req.user.id, 'userId', 'user:ig:'+req.user.id, 'tag', req.body.tag]),
+            Q.npost(sub, 'subscribe', [req.user.id]),
+            Q.npost(store, 'hmset', ['subscription:'+subscription.id, 'channel', req.user.id, 'userId', 'user:ig:'+req.user.id, 'tag', subscription.object_id]),
             Q.npost(store, 'set', ['user:subscription:'+req.user.id, subscription.id])
           ];
           return Q.allSettled(promises);
@@ -76,6 +77,7 @@ module.exports = function(app, store) {
       .then(function(subscriptionId){
 
         var promises = [
+          Q.npost(sub, 'unsubscribe', [req.user.id]),
           Q.npost(store, 'del', ['subscription:'+subscriptionId]),
           Q.npost(store, 'del', ['user:subscription:'+req.user.id])
         ];
