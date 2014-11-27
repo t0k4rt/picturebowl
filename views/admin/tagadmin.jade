@@ -10,6 +10,9 @@ block content
     input(type='button', id='subscribe', value='Surveiller tag')
     input(type='button', id='unsubscribe', value='Stopper')
     input(type='button', id='reboot', value='Reboot')
+    p link to your slideshow :
+      a(href="/slideshow/#{channel}") slideshow
+
 
 block js
   script(src="/socket.io/socket.io.js")

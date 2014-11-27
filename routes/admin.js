@@ -12,7 +12,8 @@ module.exports = function(app, store, sub) {
   router.get('/', function(req, res) {
     res.render('admin/tagadmin', {
       domain:   'localhost:3000',
-      title:    'Sélectionnez un tag'
+      title:    'Sélectionnez un tag',
+      channel:  req.user.id
     });
   });
 

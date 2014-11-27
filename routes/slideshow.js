@@ -5,11 +5,11 @@ module.exports = function(app, io) {
 
   var router = express.Router();
 
-  router.get('/{token}', function(req, res) {
+  router.get('/:token', function(req, res) {
     res.render('live', {
       domain: 'localhost:3000',
-      title: 'coucou',
-      user: req.params.token
+      title: 'Slideshow',
+      namespace: req.params.token
     });
   });
 
