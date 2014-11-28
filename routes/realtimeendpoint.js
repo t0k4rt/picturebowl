@@ -16,33 +16,29 @@ module.exports = function(app, store, pub) {
    */
   var checkMedia = function checkMedia(media, user) {
     console.log('check media : ', media.id);
-    var deferred = Q.defer();
-    store.sismember('medialist:'+user.id, media.id, function(err, res){
-      console.log(err);
-      if(err)
-        deferred.reject(new Error(err));
 
-      if(res == 0) {
-        var mediaResult = {id: media.id};
-        if(media.images.standard_resolution)
-          mediaResult.src = media.images.standard_resolution;
+    return Q.npost(store, 'sismember', ['medialist:'+user.id, media.id])
+      .then(function(result){
+        var deferred = Q.defer();
+
+        if(result == 0) {
+          Q.npost(store, 'sadd', ['medialist:'+user.id, media.id])
+            .then(function(){
+              var mediaResult = {id: media.id};
+              if(media.images.standard_resolution)
+                mediaResult.src = media.images.standard_resolution;
+
+              if(media.caption)
+                mediaResult.caption = emoji.unifiedToHTML(media.caption.text);
+
+              deferred.resolve(mediaResult);
+            });
+        }
         else
-          return;
+          deferred.reject('Media alreaday sent');
 
-        if(media.caption)
-          mediaResult.caption = emoji.unifiedToHTML(media.caption.text);
-
-        store.sadd('medialist:'+user.id, media.id, function(err, res){
-          if (err)
-            deferred.reject(new Error(err));
-          deferred.resolve(mediaResult);
-        });
-      }
-      else
-        deferred.reject('Media alreday sent');
-    });
-
-    return deferred.promise;
+        return deferred.promise;
+      });
   };
 
 
