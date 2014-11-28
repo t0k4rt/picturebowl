@@ -81,12 +81,13 @@ module.exports = function(app, store, pub) {
         medias.forEach(function(media) {
           console.log('pushmedia');
           promises2.push(
-            Q.fcall(function() {
-              return 'coucou';
-            })
+            Q.npost(store, 'sadd', ['medialist:'+user.id, media.id])
           );
         });
         return Q.allSettled(promises2);
+      })
+      .fail(function(err){
+        console.log(err);
       })
       // we publish fulfilled promises to the right channel
       .then(function(mediaResult){
