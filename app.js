@@ -71,8 +71,8 @@ sub.subscribe('global', function(err, res){
 
 // todo : ici lier la session websockets à la session utilisateur pour pouvoir envoyer les données à un user précis
 sub.on('message', function(channel, message) {
-  var res = JSON.parse(message);
-  console.log(channel, res);
+  //var res = JSON.parse(message);
+  console.log(channel, message);
   //io.sockets.emit('channel', res);
 });
 

@@ -93,10 +93,9 @@ module.exports = function(app, store, pub) {
           if(elt.state == 'fulfilled')
             result.push(elt.value);
         });
-        console.log('check media result : ', result);
 
         if(result.length > 0){
-          console.log('publish : ', result);
+          //console.log('publish : ', result);
           console.log('to channel :  ', subscription.channel);
           pub.publish(subscription.channel, JSON.stringify(result));
         }
