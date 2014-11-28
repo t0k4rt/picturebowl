@@ -86,9 +86,6 @@ module.exports = function(app, store, pub) {
         });
         return Q.allSettled(promises2);
       })
-      .fail(function(err){
-        console.log(err);
-      })
       // we publish fulfilled promises to the right channel
       .then(function(mediaResult){
         console.log('check media result : ', mediaResult);
