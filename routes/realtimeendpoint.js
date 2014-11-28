@@ -15,8 +15,6 @@ module.exports = function(app, store, pub) {
    * @returns {defer.promise|*|promise|Q.promise}
    */
   var checkMedia = function checkMedia(media, user) {
-    console.log('check media : ', media.id);
-
     return Q.npost(store, 'sismember', ['medialist:'+user.id, media.id])
       .then(function(result){
         var deferred = Q.defer();
