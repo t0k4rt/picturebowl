@@ -44,18 +44,22 @@ module.exports = function(app, store, pub) {
 
   var manageSubscription = function manageSubscription(subscriptionId, pub) {
     var subscription;
+    var user;
     // first we get the subscription from id
     return Q.npost(store, 'hgetall', ['subscription:'+subscriptionId])
       // we get the user (to retreive access token
       .then(function(_subscription){
         if(_subscription == null)
-          throw new Error('there is no such subscriptio in databse');
+          throw new Error('there is no such subscriptio in database');
 
         // we save subscription in a temp variable
         subscription = _subscription;
         return Q.npost(store, 'hgetall', [subscription.userId])
       })
-      .then(function(user){
+      .then(function(_user){
+        if(_user == null)
+          throw new Error('there is no such user in database');
+        user = _user;
 
         var deferred = Q.defer();
 
@@ -81,7 +85,7 @@ module.exports = function(app, store, pub) {
         medias.forEach(function(media) {
           console.log('pushmedia');
           promises2.push(
-            Q.npost(store, 'sadd', ['medialist:'+req.user.id, media.id])
+            Q.npost(store, 'sismember', ['medialist:'+user.id, media.id])
           );
         });
         return Q.allSettled(promises2);
