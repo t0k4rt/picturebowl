@@ -52,14 +52,14 @@ module.exports = function(app, store, pub) {
       .then(function(_subscription){
         if(_subscription == null)
           throw new Error('there is no such subscriptio in databse');
-        console.log('got user subscription', _subscription);
+        //console.log('got user subscription', _subscription);
 
         // we save subscription in a temp variable
         subscription = _subscription;
         return Q.npost(store, 'hgetall', [subscription.userId])
       })
       .then(function(user){
-        console.log('got user', user);
+        //console.log('got user', user);
 
         var deferred = Q.defer();
         ig.use({
@@ -79,6 +79,7 @@ module.exports = function(app, store, pub) {
       })
       // we filter the result to avoid to send again medias
       .then(function(medias) {
+        console.log('medias : ', medias);
         var promises = [];
         medias.forEach(function(media) {
           promises.push(checkMedia(media, req.user));
@@ -115,7 +116,7 @@ module.exports = function(app, store, pub) {
 
 
   router.post('/', function(req, res) {
-    console.log('got notification : ', req.body);
+    //console.log('got notification : ', req.body);
     // we have to get the user id from the subscription id we receive
     // then we get tag and channell from database
     Q.fcall(function(){
