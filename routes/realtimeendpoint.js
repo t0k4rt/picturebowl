@@ -81,7 +81,7 @@ module.exports = function(app, store, pub) {
         medias.forEach(function(media) {
           console.log('pushmedia');
           promises2.push(
-            Q.npost(store, 'sadd', ['medialist:'+user.id, media.id])
+            Q.npost(store, 'sadd', ['medialist:'+req.user.id, media.id])
           );
         });
         return Q.allSettled(promises2);
