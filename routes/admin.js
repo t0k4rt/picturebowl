@@ -10,7 +10,6 @@ module.exports = function(app, store, sub) {
   
   var router = express.Router();
 
-
   router.get('/', Utils.ensureAuthenticated, function(req, res) {
     res.render('admin/tagadmin', {
       domain:   'localhost:3000',

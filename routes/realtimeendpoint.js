@@ -39,7 +39,7 @@ module.exports = function(app, store, pub) {
   };
 
 
-  var manageSubscription = function manageSubscription(subscriptionId, pub) {
+  var manageSubscription = function manageSubscription(subscriptionId) {
     var subscription;
     var user;
     // first we get the subscription from id
