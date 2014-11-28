@@ -87,6 +87,7 @@ module.exports = function(app, store, pub) {
       })
       // we publish fulfilled promises to the right channel
       .then(function(mediaResult){
+        console.log('check media result : ', mediaResult);
         var result = [];
         mediaResult.forEach(function(elt){
           if(elt.state == 'fulfilled')
