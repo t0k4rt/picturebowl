@@ -71,17 +71,8 @@ io.configure( function(){
 sub.on('message', function(channel, message) {
   var res = JSON.parse(message);
   console.log(channel, res);
-  io.sockets.emit(channel, res);
+  //io.sockets.emit(channel, res);
 });
-
-sub.on('subscribe', function(channel, count) {
-  console.log('new subscription to channel : ', channel);
-});
-
-sub.subscribe('global', function(err, res){
-  console.log('pictureSubscriber', err, res);
-});
-
 
 /**
  * Instagram app info
