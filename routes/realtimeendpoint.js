@@ -62,14 +62,16 @@ module.exports = function(app, store, pub) {
         console.log('got user', user);
 
         var deferred = Q.defer();
+
         ig.use({
           client_id: app.get('CLIENT_ID'),
           client_secret:  app.get('CLIENT_SECRET'),
           access_token:  user.accessToken
         });
+        console.log('retrieve photos with tag: ', subscription.tag);
 
         // we retrieve the new photos
-        ig.tag_media_recent(result.tag, function(err, medias, pagination, remaining, limit) {
+        ig.tag_media_recent(subscription.tag, function(err, medias, pagination, remaining, limit) {
           console.log(err);
           console.log(medias);
           if(err)
