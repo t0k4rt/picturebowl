@@ -69,9 +69,9 @@ io.configure( function(){
 
 // todo : ici lier la session websockets à la session utilisateur pour pouvoir envoyer les données à un user précis
 sub.on('message', function(channel, message) {
-  //var res = JSON.parse(message);
-  console.log(channel, message);
-  io.socket.emit('channel', res);
+  var res = JSON.parse(message);
+ // console.log(channel, res);
+  io.sockets.emit(channel, res);
 });
 
 sub.on('subscribe', function(channel, count) {

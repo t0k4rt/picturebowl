@@ -9,7 +9,7 @@ module.exports = function(app, io) {
     res.render('live', {
       domain: 'localhost:3000',
       title: 'Slideshow',
-      namespace: req.params.token
+      channel: req.params.token
     });
   });
 

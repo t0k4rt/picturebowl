@@ -23,7 +23,7 @@ socket.on('control', function (data) {
   console.log(data);
 });
 
-socket.on('medias', function (data) {
+socket.on(channel, function (data) {
   console.log(data);
   data.forEach(function(value, index) {
     imgList.push(value);
