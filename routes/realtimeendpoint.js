@@ -20,7 +20,6 @@ module.exports = function(app, store, pub) {
     return Q.npost(store, 'sismember', ['medialist:'+user.id, media.id])
       .then(function(result){
         var deferred = Q.defer();
-        console.log(result);
         if(result == 0) {
           Q.npost(store, 'sadd', ['medialist:'+user.id, media.id])
             .then(function(){
@@ -83,7 +82,6 @@ module.exports = function(app, store, pub) {
       .then(function(medias) {
         var promises2 = [];
         medias.forEach(function(media) {
-          console.log('pushmedia');
           promises2.push(
             checkMedia(media, user)
           );
@@ -92,12 +90,12 @@ module.exports = function(app, store, pub) {
       })
       // we publish fulfilled promises to the right channel
       .then(function(mediaResult){
-        console.log('check media result : ', mediaResult);
         var result = [];
         mediaResult.forEach(function(elt){
           if(elt.state == 'fulfilled')
             result.push(elt.value);
         });
+        console.log('check media result : ', result);
 
         if(result.length > 0){
           console.log('publish : ', result);
