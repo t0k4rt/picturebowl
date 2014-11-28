@@ -19,7 +19,7 @@ module.exports = function(app, store, sub) {
     });
   });
 
-  router.get('/login', Utils.ensureAuthenticated, function(req, res) {
+  router.get('/login', function(req, res) {
     res.render('admin/login', {
       title:    'Please login'
     });
