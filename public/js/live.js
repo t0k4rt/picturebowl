@@ -1,7 +1,8 @@
 /**
  * Created by alexandre on 14/10/2014.
  */
-var socket = io.connect("//".domain);
+//var socket = io.connect("//".domain);
+var client = new Faye.Client('http://' + domain + "/faye");
 
 var imgList = [];
 
@@ -15,7 +16,7 @@ var delayIn = 300;
 var delayOut = 200;
 
 
-socket.on('debug', function (data) {
+/*socket.on('debug', function (data) {
   console.log(data);
 });
 
@@ -31,7 +32,16 @@ socket.on(channel, function (data) {
       lastItems.shift();
   });
 });
+*/
 
+var subscription = client.subscribe('/channel/'+channel, function(message) {
+  console.log(message);
+  /*message.forEach(function(value, index) {
+    imgList.push(value);
+    if(lastItems.push(value) > maxItems)
+      lastItems.shift();
+  });*/
+});
 
 ///state machine variables
 var i = 0;

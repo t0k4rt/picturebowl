@@ -1,5 +1,6 @@
 
-var express = require('express')
+var http = require('http')
+  , express = require('express')
   , path = require('path')
   , url = require('url')
   , logger = require('morgan')
@@ -11,6 +12,8 @@ var express = require('express')
   , RedisSessionStore = require('connect-redis')(session)
   , passport = require('passport')
   , Q = require('q')
+  , faye = require('faye')
+  , fayeRedis = require('faye-redis')
   , InstagramStrategy = require('passport-instagram').Strategy;
 
 var app = express();
@@ -45,10 +48,28 @@ if(redisUrl.auth) {
 }
 
 /**
+ * Faye
+ */
+var bayeux = new faye.NodeAdapter(
+  {
+    mount: '/faye',
+    timeout: 45,
+    engine:   {
+      type:   redis,
+      host:   redisUrl.hostname,
+      port:   redisUrl.port,
+      password: redisUrl.auth
+    }
+  }
+);
+
+bayeux.attach(server);
+
+/**
  * Socket io
  */
 
-var io = require('socket.io').listen(server);
+/*var io = require('socket.io').listen(server);
 io.configure( function(){
   io.enable('browser client minification');  // send minified client
   io.enable('browser client etag');          // apply etag caching logic based on version number
@@ -62,7 +83,7 @@ io.configure( function(){
   ]);
   var RedisStore = require('socket.io/lib/stores/redis');
   io.set('store', new RedisStore({redisPub: pub, redisSub: sub, redisClient: store, redis: redis}));
-});
+});*/
 
 
 
@@ -71,7 +92,14 @@ io.configure( function(){
 sub.on('message', function(channel, message) {
   var res = JSON.parse(message);
   console.log(channel, res);
-  io.sockets.emit(channel, res);
+  if(bayeux.getClient()) {
+    var client = bayeux.getClient();
+    client.publish('/channel/'+channel, res);
+  }
+});
+
+sub.on('subscribe', function(channel, res) {
+  console.log(channel, res);
 });
 
 /**
