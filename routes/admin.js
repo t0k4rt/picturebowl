@@ -1,5 +1,6 @@
 var express = require('express')
   , Q = require('q')
+  , Utils = require('../lib/utils')
   , ig = require('instagram-node').instagram();
 
 
@@ -9,7 +10,8 @@ module.exports = function(app, store, sub) {
   
   var router = express.Router();
 
-  router.get('/', function(req, res) {
+
+  router.get('/', Utils.ensureAuthenticated, function(req, res) {
     res.render('admin/tagadmin', {
       domain:   'localhost:3000',
       title:    'Sélectionnez un tag',
@@ -17,7 +19,19 @@ module.exports = function(app, store, sub) {
     });
   });
 
-  router.post('/tag', function(req, res) {
+  router.get('/login', Utils.ensureAuthenticated, function(req, res) {
+    res.render('admin/login', {
+      title:    'Please login'
+    });
+  });
+
+
+  app.get('/logout', function(req, res){
+    req.logout();
+    res.redirect('/login');
+  });
+
+  router.post('/tag', Utils.ensureApiAuthenticated, function(req, res) {
     var tag = req.body.tag;
     if(typeof tag == "undefined") {
       res.status(400).json({error: 'tag is mandatory'});
@@ -56,7 +70,7 @@ module.exports = function(app, store, sub) {
   });
 
 
-  router.get('/unsubscribe', function(req, res) {
+  router.get('/unsubscribe', Utils.ensureApiAuthenticated, function(req, res) {
     Q.fcall(function () {
       return Q.npost(store, 'get', ['user:subscription:'+req.user.id]);
     })
