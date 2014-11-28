@@ -77,11 +77,10 @@ module.exports = function(app, store, pub) {
       })
       // we filter the result to avoid to send again medias
       .then(function(medias) {
-
-        var promises = [];
+        var promises2 = [];
         medias.forEach(function(media) {
-          console.log(media);
-          promises.push(
+          console.log('pushmedia');
+          promises2.push(
             Q.npost(store, 'sismember', ['medialist:'+req.user.id, media.id])
               .then(function(result){
                 var deferred = Q.defer();
@@ -106,7 +105,7 @@ module.exports = function(app, store, pub) {
               })
           );
         });
-        return Q.allSettled(promises);
+        return Q.allSettled(promises2);
       })
       // we publish fulfilled promises to the right channel
       .then(function(mediaResult){
