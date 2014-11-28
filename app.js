@@ -55,7 +55,7 @@ var bayeux = new faye.NodeAdapter(
     mount: '/faye',
     timeout: 45,
     engine:   {
-      type:   redis,
+      type:   fayeRedis,
       host:   redisUrl.hostname,
       port:   redisUrl.port,
       password: redisUrl.auth
