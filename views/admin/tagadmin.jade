@@ -3,4 +3,20 @@ extends ../layout
 block content
   div(class='row')
     h1= title
-    a(href='/auth/instagram') Login with Instagram
+    div(id='msg-container')
+    p Selectionner un tag à surveiller :
+    label tag à surveiller
+    input(type='text',id='tag')
+    input(type='button', id='subscribe', value='Surveiller tag')
+    input(type='button', id='unsubscribe', value='Stopper')
+    input(type='button', id='reboot', value='Reboot')
+    p link to your slideshow :
+      a(href="/slideshow/#{channel}") slideshow
+
+
+block js
+  script(src="/socket.io/socket.io.js")
+  script(src="/js/jquery.js")
+  script.
+    var domain = "#{domain}"
+  script(src="/js/admin.js")
