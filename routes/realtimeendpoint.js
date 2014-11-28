@@ -20,7 +20,7 @@ module.exports = function(app, store, pub) {
     return Q.npost(store, 'sismember', ['medialist:'+user.id, media.id])
       .then(function(result){
         var deferred = Q.defer();
-
+        console.log(result);
         if(result == 0) {
           Q.npost(store, 'sadd', ['medialist:'+user.id, media.id])
             .then(function(){
