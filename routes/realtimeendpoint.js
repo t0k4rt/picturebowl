@@ -81,28 +81,9 @@ module.exports = function(app, store, pub) {
         medias.forEach(function(media) {
           console.log('pushmedia');
           promises2.push(
-            Q.npost(store, 'sismember', ['medialist:'+req.user.id, media.id])
-              .then(function(result){
-                var deferred = Q.defer();
-
-                if(result == 0) {
-                  Q.npost(store, 'sadd', ['medialist:'+req.user.id, media.id])
-                    .then(function(){
-                      var mediaResult = {id: media.id};
-                      if(media.images.standard_resolution)
-                        mediaResult.src = media.images.standard_resolution;
-
-                      if(media.caption)
-                        mediaResult.caption = emoji.unifiedToHTML(media.caption.text);
-
-                      deferred.resolve(mediaResult);
-                    });
-                }
-                else
-                  deferred.reject('Media alreaday sent');
-
-                return deferred.promise;
-              })
+            Q.fcall(function() {
+              return 'coucou';
+            })
           );
         });
         return Q.allSettled(promises2);
