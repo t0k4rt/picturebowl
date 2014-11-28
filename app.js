@@ -71,7 +71,7 @@ io.configure( function(){
 sub.on('message', function(channel, message) {
   //var res = JSON.parse(message);
   console.log(channel, message);
-  //io.socket.emit('channel', res);
+  io.socket.emit('channel', res);
 });
 
 sub.on('subscribe', function(channel, count) {
