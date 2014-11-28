@@ -7,7 +7,7 @@ module.exports = function(app) {
 
   router.get('/:token', function(req, res) {
     res.render('live', {
-      domain: 'localhost:3000',
+      domain: 'klerg.herokuapp.com',
       title: 'Slideshow',
       channel: req.params.token
     });
