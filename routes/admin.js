@@ -15,6 +15,7 @@ module.exports = function(app, store, sub) {
     res.render('admin/tagadmin', {
       domain:   'localhost:3000',
       title:    'Sélectionnez un tag',
+      user:     req.user,
       channel:  req.user.id
     });
   });
