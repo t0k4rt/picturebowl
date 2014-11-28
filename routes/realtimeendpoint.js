@@ -52,14 +52,12 @@ module.exports = function(app, store, pub) {
       .then(function(_subscription){
         if(_subscription == null)
           throw new Error('there is no such subscriptio in databse');
-        //console.log('got user subscription', _subscription);
 
         // we save subscription in a temp variable
         subscription = _subscription;
         return Q.npost(store, 'hgetall', [subscription.userId])
       })
       .then(function(user){
-        console.log('got user', user);
 
         var deferred = Q.defer();
 
@@ -68,12 +66,9 @@ module.exports = function(app, store, pub) {
           client_secret:  app.get('CLIENT_SECRET'),
           access_token:  user.accessToken
         });
-        console.log('retrieve photos with tag: ', subscription.tag);
 
         // we retrieve the new photos
         ig.tag_media_recent(subscription.tag, function(err, medias, pagination, remaining, limit) {
-          console.log(err);
-          console.log(medias);
           if(err)
             deferred.reject(new Error(err));
           deferred.resolve(medias);
@@ -84,7 +79,6 @@ module.exports = function(app, store, pub) {
       })
       // we filter the result to avoid to send again medias
       .then(function(medias) {
-        console.log('medias : ', medias);
         var promises = [];
         medias.forEach(function(media) {
           promises.push(checkMedia(media, req.user));
