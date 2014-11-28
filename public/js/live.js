@@ -36,11 +36,11 @@ socket.on(channel, function (data) {
 
 var subscription = client.subscribe('/channel/'+channel, function(message) {
   console.log(message);
-  /*message.forEach(function(value, index) {
+  message.forEach(function(value, index) {
     imgList.push(value);
     if(lastItems.push(value) > maxItems)
       lastItems.shift();
-  });*/
+  });
 });
 
 ///state machine variables
