@@ -62,6 +62,7 @@ module.exports = function(app, store, sub) {
           return Q.allSettled(promises);
         })
         .done(function(result) {
+          console.log('subscription', result);
           res.status(200).json({result: 'ok'});
         }, function(err){
           console.error(err);
