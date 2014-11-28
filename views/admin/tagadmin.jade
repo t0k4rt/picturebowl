@@ -2,10 +2,9 @@ extends ../layout
 
 block content
   div(class='row')
-    h1
-      welcome user #{user.id}
+    h1 welcome user #{user.id}
     h2= title
-    div(id='msg-container')
+    #msg-container
     p Selectionner un tag à surveiller :
     label tag à surveiller
     input(type='text',id='tag')
