@@ -59,7 +59,7 @@ module.exports = function(app, store, pub) {
         return Q.npost(store, 'hgetall', [subscription.userId])
       })
       .then(function(user){
-        //console.log('got user', user);
+        console.log('got user', user);
 
         var deferred = Q.defer();
         ig.use({
