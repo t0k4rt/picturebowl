@@ -80,6 +80,7 @@ module.exports = function(app, store, pub) {
 
         var promises = [];
         medias.forEach(function(media) {
+          console.log(media);
           promises.push(
             Q.npost(store, 'sismember', ['medialist:'+req.user.id, media.id])
               .then(function(result){
