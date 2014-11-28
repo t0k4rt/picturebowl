@@ -70,9 +70,12 @@ module.exports = function(app, store, pub) {
 
         // we retrieve the new photos
         ig.tag_media_recent(result.tag, function(err, medias, pagination, remaining, limit) {
+          console.log(err);
+          console.log(medias);
           if(err)
             deferred.reject(new Error(err));
           deferred.resolve(medias);
+
         });
 
         return deferred.promise;
