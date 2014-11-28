@@ -15,8 +15,10 @@ module.exports = function(app, store, pub) {
    * @returns {defer.promise|*|promise|Q.promise}
    */
   var checkMedia = function checkMedia(media, user) {
+    console.log('check media : ', media.id);
     var deferred = Q.defer();
     store.sismember('medialist:'+user.id, media.id, function(err, res){
+      console.log(err);
       if(err)
         deferred.reject(new Error(err));
 
@@ -79,6 +81,7 @@ module.exports = function(app, store, pub) {
       })
       // we filter the result to avoid to send again medias
       .then(function(medias) {
+
         var promises = [];
         medias.forEach(function(media) {
           promises.push(checkMedia(media, req.user));
@@ -157,7 +160,7 @@ module.exports = function(app, store, pub) {
         return deferred.promise;
 
       })
-      // we driectly send these medias to the pub/sub channel
+      // we directly send these medias to the pub/sub channel
       .then(function(mediaResult){
         var result = [];
         mediaResult.forEach(function(elt){
